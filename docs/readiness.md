@@ -22,7 +22,7 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 
 **Licence:** present. MIT. This repository is public, so an absent licence would be flagged. The line is not scored.
 
-**Agent compatibility (cross-check):** 81/100 deterministic, Agent-Ready. Presence fails: healthOrDebugSignal, metricsTracingOrErrorReporting, secretHygiene. Unscored. `secretHygiene` fails because this repo has no product env reads and no `.env.example`. An empty `.env.example`, a Trivy note, and a health or debug line were not added. This repo has no service and no product env, so those files would only move the unscored presence number. The presence score stays separate from the readiness score.
+**Agent compatibility (cross-check):** 81/100 deterministic, Agent-Ready. Presence fails: healthOrDebugSignal, metricsTracingOrErrorReporting, secretHygiene. Unscored. `secretHygiene` fails because this repo has no product env reads and no `.env.example`. An empty env example and a secrets-scanner note were not added. This repo has no service and no product env, so those files would only move the unscored presence number. The presence score stays separate from the readiness score.
 
 | Level | Check | Capability | Adapter | Evidence |
 | ----- | ----- | ---------- | ------- | -------- |
