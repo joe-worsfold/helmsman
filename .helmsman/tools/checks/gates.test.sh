@@ -276,6 +276,7 @@ printf '%s\n' "$out" | grep -q '^knip=false$'
 printf '%s\n' "$out" | grep -q '^docs=true$'
 printf '%s\n' "$out" | grep -q '^rust=false$'
 printf '%s\n' "$out" | grep -q '^ts=false$'
+printf '%s\n' "$out" | grep -q '^harness=false$'
 
 echo "ci paths: eslint tree"
 mkdir -p "$tmp/.helmsman/tools/eslint"
@@ -305,6 +306,26 @@ git commit -q -m workflow
 out="$(HELMSMAN_CI_BASE="$(git rev-parse HEAD~1)" expect_exit 0 "$root/.helmsman/tools/checks/ci-paths.sh")"
 printf '%s\n' "$out" | grep -q '^eslint=true$'
 printf '%s\n' "$out" | grep -q '^knip=true$'
+
+echo "ci paths: a rule change runs the harness"
+new_repo
+git commit --allow-empty -q -m init
+mkdir -p "$tmp/.cursor/rules" "$tmp/.cursor/skills" "$tmp/.cursor/automations"
+printf '%s\n' 'rule' > "$tmp/.cursor/rules/example.mdc"
+git add .cursor/rules/example.mdc
+git commit -q -m rule
+out="$(HELMSMAN_CI_BASE="$(git rev-parse HEAD~1)" expect_exit 0 "$root/.helmsman/tools/checks/ci-paths.sh")"
+printf '%s\n' "$out" | grep -q '^harness=true$'
+
+echo "ci paths: a skill change runs the harness"
+new_repo
+git commit --allow-empty -q -m init
+mkdir -p "$tmp/.cursor/skills/example"
+printf '%s\n' 'skill' > "$tmp/.cursor/skills/example/SKILL.md"
+git add .cursor/skills/example/SKILL.md
+git commit -q -m skill
+out="$(HELMSMAN_CI_BASE="$(git rev-parse HEAD~1)" expect_exit 0 "$root/.helmsman/tools/checks/ci-paths.sh")"
+printf '%s\n' "$out" | grep -q '^harness=true$'
 
 echo "ci paths: rust file is rust only"
 new_repo
