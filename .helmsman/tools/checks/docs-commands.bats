@@ -67,6 +67,16 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
+@test "pnpm turbo and a filtered script are not root scripts" {
+  printf '%s\n' '{"scripts":{"lint":"node --test"}}' > package.json
+  mkdir -p apps/web
+  printf '%s\n' '{"scripts":{"dev":"vite"}}' > apps/web/package.json
+  printf '%s\n' '# Demo' '' '```bash' "pnpm turbo run lint --filter='./packages/orders/*'" 'pnpm --filter web dev' 'pnpm --dir apps/web dev' '```' > README.md
+  run "$checks/docs-commands.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"docs commands ok"* ]]
+}
+
 @test "AGENTS.md above 900 words fails and above 400 warns" {
   words=""
   for i in $(seq 1 401); do words+="word "; done

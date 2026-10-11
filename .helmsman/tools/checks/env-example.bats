@@ -46,6 +46,17 @@ teardown() {
   [[ "$output" == *"looks like a secret"* ]]
 }
 
+@test "vite and CI names are not example keys" {
+  printf '%s\n' \
+    'export const mode = import.meta.env.DEV;' \
+    'export const ci = process.env.CI;' \
+    'export const port = process.env.PORT;' > src/listen.js
+  printf '%s\n' 'PORT=' > .env.example
+  run "$checks/env-example.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"env example ok."* ]]
+}
+
 @test "tests and fixtures are not product reads" {
   mkdir -p test fixture/src
   printf '%s\n' 'process.env.ONLY_TEST' > test/listen.test.js

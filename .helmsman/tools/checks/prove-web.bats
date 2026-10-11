@@ -72,7 +72,7 @@ range() {
     HELMSMAN_PR_BODY="$(printf '%s\n' '## How to verify locally' '' 'Looked at it.')" \
     "$checks/prove-web.sh"
   [ "$status" -eq 1 ]
-  [[ "$output" == *"screenshot"* ]]
+  [[ "$output" == *"baseline or treatment"* ]]
   run env HELMSMAN_PR_TITLE="feat(web): add a page" \
     HELMSMAN_PR_BODY="$(printf '%s\n' '## How to verify locally' '' 'Screenshots: .helmsman/reports/prove/12/treatment/home.png')" \
     "$checks/prove-web.sh"
@@ -90,6 +90,33 @@ range() {
     "$checks/prove-web.sh"
   [ "$status" -eq 1 ]
   [[ "$output" == *"missing from the pull request body"* ]]
+}
+
+@test "template text and a deleted spec do not pass" {
+  printf '%s\n' 'test("home", () => {});' > apps/web/home.spec.ts
+  git add apps/web
+  git commit -q -m "feat(web): add a page"
+  git rm -q apps/web/home.spec.ts
+  printf '%s\n' 'export const page = 2;' > apps/web/App.tsx
+  git add apps/web/App.tsx
+  git commit -q -m "feat(web): drop the spec"
+  range
+  boilerplate="$(printf '%s\n' '## How to verify locally' '' 'List the screenshot paths under `.helmsman/reports/prove/`.')"
+  run env HELMSMAN_PR_BODY="$boilerplate" "$checks/prove-web.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"no Playwright spec"* ]]
+}
+
+@test "a test file and a breaking feature title pass" {
+  mkdir -p apps/web/tests
+  printf '%s\n' 'test("home", () => {});' > apps/web/tests/home.test.ts
+  git add apps/web
+  git commit -q -m "feat!: redo the page"
+  range
+  run env HELMSMAN_PR_BODY="$(printf '%s\n' '## Prove' '' '.helmsman/reports/prove/12/treatment/home.png')" \
+    "$checks/prove-web.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"prove web ok."* ]]
 }
 
 @test "push skips the check" {

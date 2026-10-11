@@ -32,25 +32,31 @@ else
   exit 1
 fi
 
-if ! files="$(git diff --name-only "$range")"; then
+if ! files="$(git diff --name-status --diff-filter=ACMR "$range")"; then
   echo "helmsman: prove web could not read ${range}." >&2
   exit 1
 fi
 
 web=0
 spec=0
-while IFS= read -r file; do
-  [[ -z "$file" ]] && continue
+while IFS=$'\t' read -r status path extra; do
+  [[ -z "$status" ]] && continue
+  file="$path"
+  if [[ "$status" == R* && -n "$extra" ]]; then
+    file="$extra"
+  fi
   case "$file" in
     apps/web | apps/web/*) web=1 ;;
   esac
   case "$file" in
-    *.spec.ts | *.spec.tsx | *.spec.js | *.spec.mjs) spec=1 ;;
-  esac
-  case "$file" in
+    apps/web/*.spec.ts | apps/web/*.spec.tsx | apps/web/*.spec.js | apps/web/*.spec.mjs | apps/web/*.test.ts | apps/web/*.test.tsx | apps/web/*.test.js | apps/web/*.test.mjs) spec=1 ;;
     e2e/* | */e2e/* | playwright/* | */playwright/*) spec=1 ;;
   esac
 done <<< "$files"
+
+if git diff --name-only "$range" -- apps/web | grep -q .; then
+  web=1
+fi
 
 if [[ "$web" -eq 0 ]]; then
   echo "helmsman: prove web ok (no apps/web changes)."
@@ -63,7 +69,7 @@ from pathlib import Path
 
 def feat(text):
     line = (text or "").splitlines()[0] if text else ""
-    return bool(re.match(r"^feat(\(|:| |$)", line))
+    return bool(re.match(r"^feat(\([^)]*\))?!?([: ]|$)", line))
 
 title = os.environ.get("HELMSMAN_PR_TITLE", "")
 body_set = "HELMSMAN_PR_BODY" in os.environ
@@ -91,7 +97,10 @@ else:
         chunk = rest[: nxt.start()] if nxt else rest
         if not chunk.strip():
             state = "empty"
-        elif ".helmsman/reports/prove/" in chunk or "screenshot" in chunk.lower():
+        elif re.search(
+            r"\.helmsman/reports/prove/[A-Za-z0-9._-]+/(?:baseline|treatment)/\S+",
+            chunk,
+        ):
             state = "ok"
         else:
             state = "no-evidence"
@@ -104,7 +113,7 @@ read -r feature body_state <<< "$probe"
 if [[ "$feature" != "yes" ]]; then
   while IFS= read -r subject; do
     [[ -z "$subject" ]] && continue
-    if [[ "$subject" =~ ^feat(\(|:|[[:space:]]|$) ]]; then
+    if printf '%s\n' "$subject" | grep -Eq '^feat(\([^)]*\))?!?([: ]|$)'; then
       feature="yes"
       break
     fi
@@ -144,7 +153,7 @@ case "$body_state" in
     exit 1
     ;;
   no-evidence)
-    echo "helmsman: the prove section must name .helmsman/reports/prove/ or a screenshot." >&2
+    echo "helmsman: the prove section must name a file under .helmsman/reports/prove/<pr>/baseline or treatment." >&2
     exit 1
     ;;
   *)

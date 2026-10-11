@@ -87,7 +87,7 @@ builtins = {
     "list", "ls", "outdated", "why", "exec", "dlx", "create", "init",
     "publish", "pack", "config", "store", "root", "bin", "setup", "doctor",
     "approve-builds", "licenses", "audit", "deploy", "patch", "patch-commit",
-    "pkg", "run",
+    "pkg", "run", "turbo",
 }
 
 def make_targets():
@@ -121,19 +121,30 @@ def positional(tokens):
 
 def pnpm_command(tokens):
     args = tokens[1:]
-    while args and args[0].startswith("-"):
+    filtered = False
+    package_dir = None
+    while args and (args[0].startswith("-") or args[0] in {"-F", "-C"}):
         flag = args.pop(0)
-        if flag in {"--dir", "--filter", "-C", "--workspace-root"} and args:
+        if flag in {"--dir", "-C"} and args:
+            package_dir = args.pop(0)
+        elif flag.startswith("--dir="):
+            package_dir = flag.split("=", 1)[1]
+        elif flag in {"--filter", "-F"} and args:
+            filtered = True
             args.pop(0)
+        elif flag.startswith("--filter="):
+            filtered = True
+        elif flag == "--workspace-root":
+            continue
     if not args:
-        return None
+        return None, filtered, package_dir
     if args[0] == "run":
         args = args[1:]
         while args and args[0].startswith("-"):
             args.pop(0)
         if not args:
-            return None
-    return args[0]
+            return None, filtered, package_dir
+    return args[0], filtered, package_dir
 
 def check_command(rel, part):
     if "<" in part:
@@ -143,13 +154,27 @@ def check_command(rel, part):
         return
     cmd = tokens[0]
     if cmd == "pnpm":
-        name = pnpm_command(tokens)
-        if name is None or name in builtins:
+        name, filtered, package_dir = pnpm_command(tokens)
+        if name is None or name in builtins or filtered:
             return
-        if scripts is None:
-            problems.append(f"{rel} runs pnpm {name} and there is no package.json.")
-        elif name not in scripts:
-            problems.append(f"{rel} runs pnpm {name} and package.json has no {name} script.")
+        script_map = scripts
+        where = "package.json"
+        if package_dir:
+            where = f"{package_dir}/package.json"
+            script_map = None
+            nested = root / package_dir / "package.json"
+            if nested.is_file():
+                try:
+                    nested_manifest = json.loads(nested.read_text(encoding="utf-8"))
+                except json.JSONDecodeError as error:
+                    problems.append(f"{rel} {where} is not valid JSON. {error}")
+                    return
+                raw = nested_manifest.get("scripts", {})
+                script_map = raw if isinstance(raw, dict) else {}
+        if script_map is None:
+            problems.append(f"{rel} runs pnpm {name} and there is no {where}.")
+        elif name not in script_map:
+            problems.append(f"{rel} runs pnpm {name} and {where} has no {name} script.")
         return
     if cmd == "make":
         targets = make_targets()

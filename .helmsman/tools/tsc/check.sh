@@ -8,7 +8,7 @@ cd "$root"
 
 strict_ts() {
   python3 - "$root" << 'PY'
-import json, sys
+import json, re, sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
@@ -25,15 +25,55 @@ def walk(directory):
         elif path.is_file() and path.name.startswith("tsconfig") and path.suffix == ".json":
             yield path
 
+def parse_tsconfig(text):
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    out = []
+    index = 0
+    in_string = False
+    escaped = False
+    while index < len(text):
+        char = text[index]
+        if in_string:
+            out.append(char)
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            index += 1
+            continue
+        if char == '"':
+            in_string = True
+            out.append(char)
+            index += 1
+            continue
+        if char == "/" and index + 1 < len(text) and text[index + 1] == "/":
+            index = text.find("\n", index)
+            if index == -1:
+                break
+            continue
+        out.append(char)
+        index += 1
+    cleaned = re.sub(r",(\s*[}\]])", r"\1", "".join(out))
+    return json.loads(cleaned)
+
 for path in walk(root):
     found = True
     rel = path.relative_to(root).as_posix()
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = parse_tsconfig(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
         problems.append(f"{rel} is not valid JSON. {error}")
         continue
-    options = data.get("compilerOptions") if isinstance(data, dict) else None
+    if not isinstance(data, dict):
+        problems.append(f"{rel} is not an object.")
+        continue
+    options = data.get("compilerOptions")
+    if "references" in data and not isinstance(options, dict):
+        continue
+    if data.get("extends") and (not isinstance(options, dict) or "strict" not in options):
+        continue
     if not isinstance(options, dict) or options.get("strict") is not True:
         problems.append(f"{rel} does not set compilerOptions.strict to true.")
 

@@ -210,7 +210,7 @@ Review model: none
 
 `Surfaces` stays `none` until an app exists. The change that adds `apps/web` sets `Surfaces`, `E2E smoke`, and `Watch` to its Playwright commands. The change that adds `apps/mobile` does the same for Maestro. The change that adds the first SurrealDB schema sets `Integration`.
 
-`CI integration` and `CI e2e smoke` only control whether the workflow emits those jobs. A missing line means no. `Integration` and `E2E smoke` stay the local commands. Re-setup writes the two keys when they are absent, so a local patch of `emit.sh` is no longer required.
+`CI integration` and `CI e2e smoke` only control whether the workflow emits those jobs. A missing line means no. `Integration` and `E2E smoke` stay the local commands. Re-setup writes each key as `yes` when that local command is not `none`, and `no` when it is `none`, so a repo that already emits the job keeps it. When you set `E2E smoke` or `Integration` to a command that should fail the pull request, set the matching CI key to `yes`.
 
 ## Review before ready
 

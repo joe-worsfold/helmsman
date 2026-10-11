@@ -46,7 +46,7 @@ def has_header(text, header):
     return any(line.strip() == header or line.strip().startswith(header + ".") for line in text.splitlines())
 
 def is_strict(body):
-    if re.search(r"(?m)^\s*strict\s*=\s*true\b", body):
+    if re.search(r"(?im)^\s*strict\s*=\s*true\b", body):
         return True
     return re.search(r'(?m)^\s*typeCheckingMode\s*=\s*"strict"', body) is not None
 

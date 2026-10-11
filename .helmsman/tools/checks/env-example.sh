@@ -55,6 +55,8 @@ def skipped(path):
         return True
     return False
 
+# Vite and the shell set these. They are not names a developer lists.
+builtin_env = {"CI", "NODE_ENV", "MODE", "DEV", "PROD", "SSR", "BASE_URL"}
 names = set()
 
 def files():
@@ -69,6 +71,8 @@ for path in files():
     text = path.read_text(encoding="utf-8", errors="replace")
     for pattern in patterns:
         names.update(pattern.findall(text))
+
+names -= builtin_env
 
 if not names:
     print("helmsman: env example ok (no env reads).")
