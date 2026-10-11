@@ -16,13 +16,13 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 **Owners:** pass. `.github/CODEOWNERS` names an owner. Adapter: native.
 **Branch protection:** unknown. Required reviewers and required status checks are not in this clone. This line does not change Owners.
 
-`pnpm typecheck` fails the pull request when `eval/failure-text.mjs` or `eval/quarantine.mjs` does not typecheck. The `typecheck (tsc)` job runs that script after `pnpm install --frozen-lockfile`. `eval/tsconfig.json` has `"strict": true`. This repo has no app build, so build evidence is n/a. Format is n/a: there is no Prettier, rustfmt, or Ruff formatter. Lint still fails the pull request through `bash-n.sh` and `no-silences.sh`. Level 2 is 7 of 8, so that level still holds. Level 5 is 2 of 4: repeated trials and rules tested. The next gate is a sandbox that denies agent shell and network unless allowed.
+`pnpm typecheck` fails the pull request when `eval/failure-text.mjs` or `eval/quarantine.mjs` does not typecheck. The `typecheck (tsc)` job runs that script after `pnpm install --frozen-lockfile`. `eval/tsconfig.json` has `"strict": true`. This repo has no app build, so build evidence is n/a. Format is n/a: there is no Prettier, rustfmt, or Ruff formatter. Lint still fails the pull request through `bash-n.sh` and `no-silences.sh`. Level 2 is 8 of 8, so that level still holds. Level 5 is 2 of 4: repeated trials and rules tested. The next gate is a sandbox that denies agent shell and network unless allowed.
 
 **Observed:** Pure unit `ran: pass` (`pnpm check`, including the harness suite). Setup and Local setup `ran: pass` for the commands this repo can run. `pnpm install --frozen-lockfile` is `ran: env-blocked` in this agent environment: `lefthook install` exits because `core.hooksPath` is already set. The packages were installed before that script failed. That block is the tool environment.
 
 **Licence:** present. MIT. This repository is public, so an absent licence would be flagged. The line is not scored.
 
-**Agent compatibility (cross-check):** 81/100 deterministic, Agent-Ready. Presence fails: healthOrDebugSignal, metricsTracingOrErrorReporting, secretHygiene. Unscored. `secretHygiene` fails because this repo has no product env reads and no `.env.example`. The presence score stays separate from the readiness score.
+**Agent compatibility (cross-check):** 81/100 deterministic, Agent-Ready. Presence fails: healthOrDebugSignal, metricsTracingOrErrorReporting, secretHygiene. Unscored. `secretHygiene` fails because this repo has no product env reads and no `.env.example`. An empty `.env.example`, a Trivy note, and a health or debug line were not added. This repo has no service and no product env, so those files would only move the unscored presence number. The presence score stays separate from the readiness score.
 
 | Level | Check | Capability | Adapter | Evidence |
 | ----- | ----- | ---------- | ------- | -------- |
@@ -41,7 +41,7 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 | 2 | Local setup | pass | native | `README.md` |
 | 2 | Docs match the tree | pass | helmsman | `docs-commands.sh` runs inside `pnpm setup:check`. |
 | 2 | Scoped local check | pass | helmsman | `lefthook.yml` globs, and `HELMSMAN_AFFECTED=1` in `pnpm-task.sh`. |
-| 2 | Pinned toolchain | fail | absent | No environment image. `.nvmrc` pins the Node version. |
+| 2 | Pinned toolchain | pass | native | `.nvmrc` is `26.11.1`. No `Cargo.toml`, so a root `rust-toolchain.toml` is not required. |
 | 3 | Secrets and dependencies | pass | helmsman | The secret scan runs in `pnpm setup:check` and in `pnpm audit:all`. The audit job runs `pnpm audit --audit-level=high` on the root lock and on `.helmsman/tools/eslint` and `.helmsman/tools/knip`. gitleaks is not installed here; the built-in patterns still fail the commit. |
 | 3 | Policy scan | n/a | absent | No application SAST target. Infrastructure is SST; there is no Terraform or Checkov adapter. |
 | 3 | Boundaries | pass | helmsman | `.helmsman/tools/eslint/check.mjs` rejects `import "scripts/..."`. The generated hand-edit gate rejects a lockfile or `generated/` edit. The `eslint-package` job runs that file when `.helmsman/tools/eslint` changes. |

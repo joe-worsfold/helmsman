@@ -92,6 +92,7 @@ Prove each capability from a file or a job. Inspect what the repo actually has:
 - The package-manager script manifest and `Makefile`
 - `.github/CODEOWNERS` or an equivalent owners file
 - `.devcontainer/`
+- `.nvmrc`, and a root `rust-toolchain.toml` when a `Cargo.toml` is present
 - `.helmsman/setup.md` and `.helmsman/tools/checks/` when those files are present
 
 Branch protection, required reviewers, and required status checks are not in a plain clone. They are a separate line, not the Owners row. When you cannot see them, that line is **unknown**. Unknown protection does not flip Owners to fail or unknown.
@@ -159,7 +160,7 @@ Why: waiting for CI is how agents burn a review on format, secrets, and dead cod
 | Local setup | A new agent can run the app from a document. | README or local-dev document. |
 | Docs match the tree | A fenced bash or sh command exists, and a stated Node or Rust version matches the pin. | `.helmsman/tools/checks/docs-commands.sh` inside `pnpm setup:check`. |
 | Scoped local check | The hook runs on the files that changed, and a local affected run exists. | Lefthook globs, and `HELMSMAN_AFFECTED=1`. |
-| Pinned toolchain | The environment is an image or devcontainer, not only version numbers in a README. | `.devcontainer` or equivalent. |
+| Pinned toolchain | Node is an exact version in `.nvmrc`. When a `Cargo.toml` is present, the root `rust-toolchain.toml` pins Rust. A version named only in a README fails. A devcontainer or environment image still passes. | `.nvmrc`. Root `rust-toolchain.toml` when Rust is in the tree. `.devcontainer` or an equivalent image also passes. |
 
 ### Level 3 — Security, data, and boundaries fail the pull request too
 

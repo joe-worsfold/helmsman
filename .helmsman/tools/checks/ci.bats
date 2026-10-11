@@ -173,6 +173,17 @@ EOF
   grep -q 'name: prove (web)' .github/workflows/helmsman.yml
   grep -q 'run: pnpm --config.verify-deps-before-run=false prove:web' .github/workflows/helmsman.yml
   grep -q "needs.changes.outputs.web == 'true'" .github/workflows/helmsman.yml
+  grep -q '      - edited' .github/workflows/helmsman.yml
+  prove_if="$(awk '
+    $0 ~ "^  prove-web:$" { on=1; next }
+    on && /^  [^ ]/ { exit }
+    on { print }
+  ' .github/workflows/helmsman.yml)"
+  [[ "$prove_if" == *"action == 'edited'"* ]]
+  [[ "$prove_if" == *"github.event.changes.body"* ]]
+  [[ "$prove_if" == *"always()"* ]]
+  run grep -F "action != 'edited'" <<< "$prove_if"
+  [ "$status" -eq 1 ]
   run grep -F 'playwright' .github/workflows/helmsman.yml
   [ "$status" -eq 1 ]
 }
@@ -302,7 +313,12 @@ EOF
   run "$checks/../ci/emit.sh"
   [ "$status" -eq 0 ]
   grep -q 'ready_for_review' .github/workflows/helmsman.yml
+  grep -q '      - edited' .github/workflows/helmsman.yml
+  grep -q "action == 'edited' && 'edited'" .github/workflows/helmsman.yml
   grep -q 'pull_request.draft == false' .github/workflows/helmsman.yml
+  grep -q "github.event.action != 'edited'" .github/workflows/helmsman.yml
+  run grep -F "action == 'edited' && github.event.changes.body" .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
   grep -q 'needs.changes.outputs.harness' .github/workflows/helmsman.yml
   grep -q 'needs.changes.outputs.audit' .github/workflows/helmsman.yml
   grep -q 'needs.changes.outputs.guard' .github/workflows/helmsman.yml

@@ -227,10 +227,12 @@ begin_job() {
   emit "  ${id}:"
   emit "    name: ${name}"
   emit "    needs: changes"
-  if [[ "$gate" == "always" ]]; then
-    emit "    if: ${ready}"
+  if [[ "$id" == "prove-web" ]]; then
+    emit "    if: always() && ${ready} && ((github.event.action == 'edited' && github.event.changes.body) || (needs.changes.result == 'success' && (${gate})))"
+  elif [[ "$gate" == "always" ]]; then
+    emit "    if: ${ready} && github.event.action != 'edited'"
   else
-    emit "    if: ${ready} && (${gate})"
+    emit "    if: ${ready} && github.event.action != 'edited' && (${gate})"
   fi
   emit "    runs-on: ubuntu-latest"
   emit "    timeout-minutes: ${timeout}"
@@ -291,18 +293,19 @@ emit "      - opened"
 emit "      - ready_for_review"
 emit "      - synchronize"
 emit "      - reopened"
+emit "      - edited"
 emit "  push:"
 emit "    branches:"
 emit "      - main"
 emit ""
 emit "concurrency:"
-emit '  group: ${{ github.workflow }}-${{ github.ref }}'
+emit "  group: \${{ github.workflow }}-\${{ github.ref }}-\${{ github.event.action == 'edited' && 'edited' || 'run' }}"
 emit "  cancel-in-progress: true"
 emit ""
 emit "jobs:"
 emit "  changes:"
 emit "    name: changes"
-emit "    if: ${ready}"
+emit "    if: ${ready} && github.event.action != 'edited'"
 emit "    runs-on: ubuntu-latest"
 emit "    timeout-minutes: 5"
 emit "    outputs:"
@@ -458,7 +461,7 @@ emit ""
 
 emit "  ci-ok:"
 emit "    name: ci-ok"
-emit "    if: always() && ${ready}"
+emit "    if: always() && ${ready} && github.event.action != 'edited'"
 emit "    needs:"
 for id in "${job_ids[@]}"; do
   emit "      - ${id}"

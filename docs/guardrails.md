@@ -8,9 +8,9 @@ Every job runs the same root pnpm script a developer runs locally. The workflow 
 
 Turbo is the runner where a task exists. CI adds `--affected` when `GITHUB_ACTIONS` is `true` (the script also honors `HELMSMAN_AFFECTED=1` for a local trial). A local `pnpm check` does not pass `--affected`, so the cache is the full set. Optional remote cache is `TURBO_TOKEN` and `TURBO_TEAM`, or `TURBO_API`. It is not required. The Turbo cache does not store Rust `target/`; `Swatinem/rust-cache` does. `turbo.json` `globalDependencies` include `Cargo.lock`, `pnpm-lock.yaml`, and `uv.lock`. Lint, format, typecheck, test, and unused use empty `outputs` so the task result is cached without copying `target/`.
 
-Push runs on `main` only. A pull request is one workflow, not a second copy from the branch push. The pull request types are `opened`, `ready_for_review`, `synchronize`, and `reopened`. Every job is skipped while the pull request is a draft (`github.event_name != 'pull_request' || github.event.pull_request.draft == false`). Agents keep the pull request draft, prove it with `pnpm check` and the pre-commit hook, and mark it ready when that proof is done. Marking ready is when CI runs.
+Push runs on `main` only. A pull request is one workflow, not a second copy from the branch push. The pull request types are `opened`, `ready_for_review`, `synchronize`, `reopened`, and `edited`. Every job is skipped while the pull request is a draft (`github.event_name != 'pull_request' || github.event.pull_request.draft == false`). A pull request `edited` event skips every job except `prove (web)`. That job runs only when the body changed and `apps/web` exists. The edited run uses its own concurrency group, so it does not cancel the suite already in progress. Agents keep the pull request draft, prove it with `pnpm check` and the pre-commit hook, and mark it ready when that proof is done. Marking ready is when CI runs.
 
-Wall clock stays under 5 minutes. `changes` runs first. Every other job `needs: changes` and starts only when its path output is true. Those jobs run in parallel. GitHub bills the sum of job minutes, rounded up per job. A skipped job is free. A job that starts is at least one minute. A draft costs nothing.
+Wall clock stays under 5 minutes. `changes` runs first, except on `edited`, where it is skipped. Every other job `needs: changes` and starts only when its path output is true. `prove (web)` uses `always()` so a body edit can run it after `changes` was skipped. Those jobs run in parallel. GitHub bills the sum of job minutes, rounded up per job. A skipped job is free. A job that starts is at least one minute. A draft costs nothing. An `edited` event with no `apps/web` starts no job.
 
 `pnpm lint:actions` is [actionlint](https://github.com/rhysd/actionlint) v1.7.12. `.helmsman/tools/checks/actionlint.sh` installs it with the official download script pinned to commit `914e7df21a07ef503a81201c76d2b11c789d3fca`. The CI job calls that same script and passes the pin in the environment. The first local run downloads the binary into the user cache.
 
@@ -18,7 +18,7 @@ Wall clock stays under 5 minutes. `changes` runs first. Every other job `needs: 
 
 | Script | CI job | `HELMSMAN_FILTER` | When the job exists |
 | --- | --- | --- | --- |
-| `pnpm ci:paths` | changes | | Every run that is not a draft. Outputs `ts`, `rust`, `python`, `schema`, `web`, `api`, `docs`, `setup`, `eslint`, `knip`, `harness`, `workflows`, `audit`, and `guard`. |
+| `pnpm ci:paths` | changes | | Every run that is not a draft and is not `edited`. Outputs `ts`, `rust`, `python`, `schema`, `web`, `api`, `docs`, `setup`, `eslint`, `knip`, `harness`, `workflows`, `audit`, and `guard`. |
 | `pnpm lint` | lint (eslint) | `ts` | TypeScript packages, or a root ESLint config that references Helmsman. Gated on `ts`. |
 | `pnpm format:check` | format (prettier) | `ts` | TypeScript packages, or Prettier. Gated on `ts`. |
 | `pnpm typecheck` | typecheck (tsc) | `ts`, or `harness` when Python is also present and the only TypeScript project is `eval/tsconfig.json` | TypeScript packages, or a root or eval `tsconfig` with no TypeScript package. `needs: changes`. Gated on `ts`. Eval `.ts`, `.tsx`, `.mts`, `.mjs`, and `eval/tsconfig.json` set `ts`. |
@@ -32,7 +32,7 @@ Wall clock stays under 5 minutes. `changes` runs first. Every other job `needs: 
 | `pnpm test` | test (pytest) | `python` | `pyproject.toml` or `uv.lock`. Gated on `python`. |
 | `pnpm test:integration` | test (integration) | | `CI integration` is `yes`. `needs: changes`. Gated on `rust` or `schema`. `Integration` stays the local command. |
 | `pnpm e2e:smoke` | e2e smoke | | `CI e2e smoke` is `yes`. `needs: changes`. Gated on `web` or `api`. `E2E smoke` stays the local command. Playwright's browser install, when the setup line names it, stays inside the script. |
-| `pnpm prove:web` | prove (web) | | `apps/web` exists. `needs: changes`. Gated on `web`. The job checks the diff and the pull request body. It does not install dependencies, Playwright, or take screenshots. |
+| `pnpm prove:web` | prove (web) | | `apps/web` exists. `needs: changes`. Gated on `web`, and also when the pull request body is edited. `always()` lets that run proceed when `changes` was skipped. The job checks the diff and the pull request body. It does not install dependencies, Playwright, or take screenshots. |
 | `pnpm test` | test (harness) | `harness` | `eval/flake.sh` and `eval/trials.sh`. This repo only. `needs: changes`. Gated on `harness`: `.helmsman/tools/**` or `eval/**`. In CI the script runs flake and then three trials. Locally it runs `eval/run.sh` once. |
 | `pnpm audit:all` | audit | | `needs: changes`. Gated on `audit`: a manifest or lockfile (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `Cargo.toml`, `Cargo.lock`, `pyproject.toml`, `uv.lock`, `deny.toml`, `rust-toolchain.toml`, `.nvmrc`). pnpm audit, the ESLint and Knip package lock audits, cargo audit, cargo deny, the secret scan, and toolchain freshness. |
 | `pnpm setup:check` | setup | | `needs: changes`. Gated on `setup`: `.helmsman/**`, `.github/**`, toolchain and workspace files, shell, and source. A docs-only diff does not set it. Setup fields, tool home, upstream pin, pnpm lock pin, web drift, shell syntax, silences, schema static checks, secrets, documented commands, env example names, `AGENTS.md` length, strict tsconfigs, and `emit.sh --check`. |
@@ -41,7 +41,7 @@ Wall clock stays under 5 minutes. `changes` runs first. Every other job `needs: 
 | `pnpm lint:actions` | lint (actionlint) | | Every repository whose CI is GitHub. `needs: changes`. Gated on `workflows`: `.github/workflows/**` or `.github/actions/**`. |
 | `pnpm eslint:package` | eslint-package | | `.helmsman/tools/eslint/check.mjs`. Gated on `eslint`. |
 | `pnpm knip:package` | knip-package | | `.helmsman/tools/knip/check.mjs`. Gated on `knip`. |
-| `pnpm ci:ok` | ci-ok | | Every run that is not a draft. `success` and `skipped` pass. Anything else fails. It waits on every job the emitter wrote, including the ones the path filter skipped. |
+| `pnpm ci:ok` | ci-ok | | Every run that is not a draft and is not `edited`. `success` and `skipped` pass. Anything else fails. It waits on every job the emitter wrote, including the ones the path filter skipped. |
 | `pnpm review:current` | ci-ok | | Same job as `pnpm ci:ok`, as a second step. It does not add a billed minute. That job asks to read issues and pull requests so it can read the review comment. It fails when the latest review comment recorded a sha and the patch changed after that. A rebase that keeps the same patch-id passes. |
 | `pnpm check` | | | Local. Lint, format, typecheck, unused, and test. Not a CI job. |
 
