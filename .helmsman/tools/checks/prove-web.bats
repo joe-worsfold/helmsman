@@ -9,6 +9,8 @@ setup() {
   git config user.email "gate@example.com"
   git config user.name "gate"
   checks="$(cd "$(dirname "$BATS_TEST_FILENAME")" && pwd)"
+  unset HELMSMAN_PR_TITLE HELMSMAN_PR_BODY HELMSMAN_DIFF_RANGE
+  unset GITHUB_EVENT_PATH GITHUB_ACTIONS GITHUB_EVENT_NAME
   git commit --allow-empty -q -m init
   mkdir -p apps/web
   printf '%s\n' 'export const page = 1;' > apps/web/App.tsx
