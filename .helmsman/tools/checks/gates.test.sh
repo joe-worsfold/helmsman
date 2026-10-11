@@ -310,7 +310,7 @@ printf '%s\n' "$out" | grep -q '^knip=true$'
 echo "ci paths: a rule change runs the harness"
 new_repo
 git commit --allow-empty -q -m init
-mkdir -p "$tmp/.cursor/rules" "$tmp/.cursor/skills" "$tmp/.cursor/automations"
+mkdir -p "$tmp/.cursor/rules"
 printf '%s\n' 'rule' > "$tmp/.cursor/rules/example.mdc"
 git add .cursor/rules/example.mdc
 git commit -q -m rule
