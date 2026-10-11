@@ -1,0 +1,3 @@
+{
+  "ignoredPaths": ["eval/fixture", "eval/scenarios", "fixture", "node_modules"]
+}

@@ -26,6 +26,64 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
+python3 - << 'PY'
+import re, sys
+from pathlib import Path
+
+def section(text, header):
+    lines = []
+    grab = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("["):
+            grab = stripped == header or stripped.startswith(header + ".")
+            continue
+        if grab:
+            lines.append(line)
+    return "\n".join(lines)
+
+def has_header(text, header):
+    return any(line.strip() == header or line.strip().startswith(header + ".") for line in text.splitlines())
+
+def is_strict(body):
+    if re.search(r"(?m)^\s*strict\s*=\s*true\b", body):
+        return True
+    return re.search(r'(?m)^\s*typeCheckingMode\s*=\s*"strict"', body) is not None
+
+problems = []
+watched = False
+pyproject = Path("pyproject.toml")
+if pyproject.is_file():
+    text = pyproject.read_text(encoding="utf-8")
+    for label, header in (("mypy", "[tool.mypy]"), ("pyright", "[tool.pyright]")):
+        if has_header(text, header):
+            watched = True
+            if not is_strict(section(text, header)):
+                problems.append(f"{label} is not strict.")
+
+mypy_ini = Path("mypy.ini")
+if mypy_ini.is_file():
+    ini = mypy_ini.read_text(encoding="utf-8")
+    if has_header(ini, "[mypy]"):
+        watched = True
+        if not is_strict(section(ini, "[mypy]")):
+            problems.append("mypy.ini is not strict.")
+
+pyright_json = Path("pyrightconfig.json")
+if pyright_json.is_file():
+    watched = True
+    raw = pyright_json.read_text(encoding="utf-8")
+    if '"strict": true' not in raw and '"typeCheckingMode": "strict"' not in raw:
+        problems.append("pyrightconfig.json is not strict.")
+
+if problems:
+    for problem in problems:
+        print(f"helmsman: {problem}", file=sys.stderr)
+    sys.exit(1)
+if watched:
+    print("helmsman: python strict ok.")
+PY
+
 python3 - "$floor" pyproject.toml ruff.toml .ruff.toml << 'PY'
 import re, sys
 from pathlib import Path

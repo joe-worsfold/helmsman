@@ -460,6 +460,10 @@ if setup.is_file():
         extra += "Nightly max tokens: 200000\n"
     if "nightly max minutes:" not in lowered:
         extra += "Nightly max minutes: 30\n"
+    if "ci integration:" not in lowered:
+        extra += "CI integration: no\n"
+    if "ci e2e smoke:" not in lowered:
+        extra += "CI e2e smoke: no\n"
     if extra:
         if not text.endswith("\n"):
             text += "\n"

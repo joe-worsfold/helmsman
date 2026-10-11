@@ -32,6 +32,8 @@ Every scored row has three columns. Only capability enters the level.
 | Adapter | `helmsman`, `native`, or `absent`. This is not the score. A missing adapter does not lower the level and does not flip capability to fail. |
 | Evidence | The file or job that fails the commit or the pull request. A README sentence with no command does not count. |
 
+Setup, Local setup, and Pure unit may add an Observed value: `ran: pass`, `ran: fail`, or `ran: env-blocked`. The level still uses capability. `env-blocked` means the tool environment could not run the command. It is not a repository defect. When you score this repository, run the documented install and `pnpm check`. Stop at 10 minutes and record `env-blocked` if the environment cannot finish.
+
 `helmsman` means a Helmsman script is what fails the commit or the pull request. `e2e-smoke.sh`, `integration.sh`, `languages.sh`, and `setup.md` are that adapter when a hook or CI runs them. `native` means the repo's own command or job does, and Helmsman is not installed or is not the thing that runs. `absent` means nothing runs. A copied Helmsman package that nothing runs is `absent` and the capability fails. An equivalent command that does run is `native` and the capability passes.
 
 Unknown counts as a fail on a scored row. Say what you could not see. `n/a` leaves the count. It is not a pass and not a fail.
@@ -108,8 +110,8 @@ When the Helmsman adapter is present and a hook or CI runs it, record `helmsman`
 | Pre-merge smoke | A pull-request check runs the critical-path smoke and fails the pull request when that smoke runs. A path filter or a `run-e2e` label counts. The exhaustive suite does not. | `.helmsman/tools/checks/e2e-smoke.sh` runs the `E2E smoke` line when that command is the smoke. |
 | Post-deploy / full | The exhaustive suite runs after a non-production deploy, on main, or nightly. | The deploy, main, or nightly workflow calls it. It does not have to be `e2e-smoke.sh` on the pull request. |
 | Integration | CI runs the integration against the real local service when the app has a database, queue, or emulator. No such boundary: `n/a`. | `.helmsman/tools/checks/integration.sh` runs the `Integration` line. |
-| Lint | Lint errors fail the pull request. | `pnpm lint`, or `languages.sh`, or `make check` / `make lint` / `make web-check` when that command is the lint gate. |
-| Types | Typecheck errors fail the pull request. | `pnpm typecheck`, or `make check` or `make web-check` when that command typechecks, or `.helmsman/tools/tsc/check.sh` when a typecheck script runs it. |
+| Lint and format | Lint errors fail the pull request. Format fails when a formatter is installed. No formatter: format is `n/a`. | `pnpm lint`, and `pnpm format:check` when Prettier, rustfmt, or Ruff is present. |
+| Types | Typecheck errors fail the pull request, and strict mode is on. | `pnpm typecheck`, or `.helmsman/tools/tsc/check.sh --strict`. A build (`next build`, `expo export`, `cargo build`) is extra evidence when the app has one. |
 | Pure unit | Pure-function tests fail the pull request. This does not clear end-to-end or integration. | `pnpm test`, the test job, or `make check` when that is the test gate. |
 | Lockfile | A clean install fails when the lockfile is stale. | `pnpm install --frozen-lockfile` in the pull-request job. `pnpm-lock.sh` also fails a `pnpm/action-setup` version other than the exact `packageManager` field when that script runs. |
 | Pre-commit | Format, lint, secrets, and dead-code or import checks run on commit. | Lefthook or `.pre-commit-config.yaml` runs `pnpm setup:check`, `pnpm diff:guard`, `pnpm plain:language`, and `pnpm lint` / `pnpm format:check` / `pnpm typecheck` / `pnpm test` for the files that changed. |
@@ -138,8 +140,8 @@ The pre-merge smoke is required on its own. The other rows sit in the 80% count.
 | Local | A person can run and watch a journey. | The local command and the runner config. No app: pass. |
 | Pre-merge smoke | The critical-path smoke fails the pull request when it runs. Core journeys, target under about 5 minutes, preferably parallel. A path filter or a `run-e2e` label counts when the smoke can still fail the pull request. | The pull-request job, the path filter, or the label trigger. Or `e2e-smoke.sh` when that job runs the smoke. No app: pass. Duplicate runner: fail. Exhaustive suite alone: fail. |
 | Setup | A human or agent can find install and the pull-request suite command. | README or a document it links. |
-| Lint | Lint errors fail the pull request. | The lint job or the Helmsman language gate. A package file that did not run does not pass. |
-| Types | Typecheck errors fail the pull request. | The typecheck job or the Helmsman tsc adapter. |
+| Lint and format | Lint errors fail the pull request. Format fails the pull request when Prettier, rustfmt, or Ruff is the formatter. No formatter: format is `n/a` and the row follows lint. | The lint job. Format is the format job when one exists. |
+| Types | Typecheck errors fail the pull request, and strict mode is on. A product `tsconfig` has `"strict": true`. Python strict is `strict = true` or `typeCheckingMode = "strict"` when a type checker is configured. When the app has a build (`next build`, `expo export`, or `cargo build`), that build is evidence too, and it is change-gated. No app build: build is `n/a`. | The typecheck job, `.helmsman/tools/tsc/check.sh --strict`, or the Python strict probe. |
 | Integration | The app's database, queue, or emulator boundary runs in CI against the real local service. No such boundary: `n/a`. | The integration job, or `integration.sh` when that job runs it. |
 | Pure unit | Pure-function tests run and fail the pull request. | The unit job. Does not clear the rows above. |
 | Lockfile | Install fails when the lockfile is stale. | Frozen install from the lockfile in the pull-request job. |
@@ -150,11 +152,13 @@ Why: waiting for CI is how agents burn a review on format, secrets, and dead cod
 
 | Check | What | Evidence that passes |
 | --- | --- | --- |
-| One standard | One always-on rule. Other rules load only for matching files. The same rule is not copied twice. The repo's own standard counts. A missing Helmsman standards file does not fail this row. | The always-on rule file. |
+| One standard | One always-on rule. Other rules load only for matching files. The same rule is not copied twice. Root and nested `AGENTS.md` above 400 words warns and above 900 fails. A warning does not fail the row. The repo's own standard counts. A missing Helmsman standards file does not fail this row. | The always-on rule file, and `agents-words.sh` when `pnpm setup:check` runs it. |
 | Pre-commit | Format, lint, secrets, and dead-code or import checks run on commit. | `.github/hooks/pre-commit`, `.pre-commit-config.yaml`, husky, or lefthook, and the checks that hook runs. |
 | Pull-request template | A reviewer sees what the author claims. | The pull-request template. |
 | Owners | The clone names who owns the paths. | `CODEOWNERS` or an equivalent file that names owners. |
 | Local setup | A new agent can run the app from a document. | README or local-dev document. |
+| Docs match the tree | A fenced bash or sh command exists, and a stated Node or Rust version matches the pin. | `.helmsman/tools/checks/docs-commands.sh` inside `pnpm setup:check`. |
+| Scoped local check | The hook runs on the files that changed, and a local affected run exists. | Lefthook globs, and `HELMSMAN_AFFECTED=1`. |
 | Pinned toolchain | The environment is an image or devcontainer, not only version numbers in a README. | `.devcontainer` or equivalent. |
 
 ### Level 3 — Security, data, and boundaries fail the pull request too
@@ -165,9 +169,9 @@ Why: lint does not catch a secret, a bad dependency, a half-written multi-item w
 | --- | --- | --- |
 | Secrets and dependencies | Secret scan and dependency audit both run and fail the pull request. | The pull-request security job, or the Helmsman secret and audit commands when those run. |
 | Policy scan | Infrastructure or application static analysis runs when those files change. No such files: `n/a`. | The policy job. |
-| Boundaries | An illegal import between applications, libraries, and scripts fails. In STAR, a domain depending on another domain fails too. | The import-boundary test or lint rule. In STAR, a check over each domain's `Cargo.toml`, `package.json`, or `pyproject.toml` that fails a sibling domain dependency. |
+| Boundaries | An illegal import between applications, libraries, and scripts fails. In STAR, a domain depending on another domain fails too. A hand edit of a generated file or a lockfile fails. | The import-boundary test or lint rule, and the generated hand-edit gate. In STAR, a check over each domain's `Cargo.toml`, `package.json`, or `pyproject.toml` that fails a sibling domain dependency. |
 | Suppression guard | New suppressions and skipped tests fail. | The diff guard in the hook or CI. |
-| Telemetry | The running app emits logs or traces. A deploy ping alone does not count. No running app: `n/a`. | The app's logger or tracer. |
+| Telemetry | The running app emits logs or traces. A service also has a health endpoint the smoke hits. A deploy ping alone does not count. No running app: `n/a`. | The app's logger or tracer, and the health route when there is a service. |
 
 ### Level 4 — Feedback stays fast, and we have watched an agent work
 
@@ -228,8 +232,8 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 | 1 | End-to-end, local | pass / fail / n/a | helmsman / native / absent | file or job. No app: pass. |
 | 1 | End-to-end, pre-merge smoke | pass / fail / n/a | helmsman / native / absent | file or job. No app: pass. This row gates level 1. A path filter or `run-e2e` label counts. |
 | 1 | Setup | pass / fail / unknown | helmsman / native / absent | file or job |
-| 1 | Lint | pass / fail / unknown | helmsman / native / absent | file or job |
-| 1 | Types | pass / fail / unknown | helmsman / native / absent | file or job |
+| 1 | Lint and format | pass / fail / unknown / n/a | helmsman / native / absent | file or job. No formatter: format is n/a. |
+| 1 | Types | pass / fail / unknown | helmsman / native / absent | file or job. Strict is on. Build is n/a when the app has no build. |
 | 1 | Integration | pass / fail / n/a | helmsman / native / absent | file or job. No database, queue, or emulator: n/a. |
 | 1 | Pure unit | pass / fail | helmsman / native / absent | file or job. Does not clear the rows above. |
 | 1 | Lockfile | pass / fail / unknown | helmsman / native / absent | file or job |
@@ -238,6 +242,8 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 | 2 | Pull-request template | pass / fail | helmsman / native / absent | file or job |
 | 2 | Owners | pass / fail | helmsman / native / absent | file or job |
 | 2 | Local setup | pass / fail | helmsman / native / absent | file or job |
+| 2 | Docs match the tree | pass / fail | helmsman / native / absent | file or job |
+| 2 | Scoped local check | pass / fail | helmsman / native / absent | file or job |
 | 2 | Pinned toolchain | pass / fail | helmsman / native / absent | file or job |
 | 3 | Secrets and dependencies | pass / fail / unknown | helmsman / native / absent | file or job |
 | 3 | Policy scan | pass / fail / unknown / n/a | helmsman / native / absent | file or job |
@@ -261,6 +267,16 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 ```
 
 This repository pins the level arithmetic in `eval/readiness.mjs`. An adopting repo does not need that file. Follow this skill.
+
+## Licence
+
+Unscored. Record `present` or `absent`. Flag an absent licence only when the repository is public.
+
+## Agent compatibility (cross-check)
+
+Unscored. Run `.helmsman/tools/checks/agent-compat.sh` from this skill or the nightly report. Do not run it from CI or from `pnpm setup:check`. The config ignores the path prefixes `eval/fixture`, `eval/scenarios`, `fixture`, and `node_modules`. The scanner makes no network calls. The script uses `npm exec --offline` and does not download the package. If Node, npm, or the local install is missing, the script prints `cross-check unavailable (tool environment)` and exits 0.
+
+A presence score of 81 or higher is required before readiness level 1 can be treated as enough, and it still does not earn that level by itself. Readiness at level 1 or above with a presence score below 60 points to docs or presence gaps. Keep the two scores apart.
 
 ## The other readings
 

@@ -1,4 +1,5 @@
 # Reports stay gitignored so findings are not committed.
+# Prove evidence under .helmsman/reports/prove/ stays ignored too.
 # The harness is tracked under .helmsman/tools. The star ignores every
 # other child of .helmsman, including reports. The tools exceptions are
 # required: git will not descend into an ignored directory.

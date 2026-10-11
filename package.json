@@ -18,6 +18,7 @@
     "setup:check": "bash .helmsman/tools/checks/pnpm-task.sh setup",
     "diff:guard": "bash .helmsman/tools/checks/pnpm-task.sh diff-guard",
     "plain:language": "bash .helmsman/tools/checks/pnpm-task.sh plain",
+    "prove:web": "bash .helmsman/tools/checks/prove-web.sh",
     "review:current": "bash .helmsman/tools/checks/review-current.sh",
     "fix:forward": "bash .helmsman/tools/checks/fix-forward.sh",
     "ci:paths": "bash .helmsman/tools/checks/ci-paths.sh",

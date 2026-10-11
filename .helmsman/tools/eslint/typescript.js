@@ -18,5 +18,16 @@ export default [
         projectService: true,
       },
     },
+    rules: {
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          prefer: "type-imports",
+          fixStyle: "separate-type-imports",
+          disallowTypeAnnotations: true,
+        },
+      ],
+    },
   },
 ];

@@ -1,6 +1,6 @@
 # Guardrails
 
-The CI design lives in Helmsman. Setup writes it with `.helmsman/tools/ci/emit.sh`. A target repo does not hand-write `.github/workflows/helmsman.yml`. The emitter writes a job only when that language or feature is in the tree: no Python jobs without `pyproject.toml` or `uv.lock`, no Rust jobs without a `Cargo.toml`, no `test (integration)` when `Integration` is `none`, no `e2e smoke` when `E2E smoke` is `none`.
+The CI design lives in Helmsman. Setup writes it with `.helmsman/tools/ci/emit.sh`. A target repo does not hand-write `.github/workflows/helmsman.yml`. The emitter writes a job only when that language or feature is in the tree: no Python jobs without `pyproject.toml` or `uv.lock`, no Rust jobs without a `Cargo.toml`. `test (integration)` exists when `CI integration` is `yes`. `e2e smoke` exists when `CI e2e smoke` is `yes`. `Integration` and `E2E smoke` stay the local commands. A missing CI key means the job stays off.
 
 Every job runs the same root pnpm script a developer runs locally. The workflow `run` lines are those scripts. Setup and cache steps are the rest (checkout, pnpm, Node, `pnpm install --frozen-lockfile`, Turbo cache, rust-toolchain, rust-cache, uv). `HELMSMAN_FILTER` selects one language inside the script. Unset, the script runs every language this repo has.
 
@@ -30,11 +30,12 @@ Wall clock stays under 5 minutes. `changes` runs first. Every other job `needs: 
 | `pnpm lint` | lint (ruff) | `python` | `pyproject.toml` or `uv.lock`. Ruff format is part of this lint. Gated on `python`. |
 | `pnpm typecheck` | typecheck (ty) | `python` | `pyproject.toml` or `uv.lock`. Gated on `python`. |
 | `pnpm test` | test (pytest) | `python` | `pyproject.toml` or `uv.lock`. Gated on `python`. |
-| `pnpm test:integration` | test (integration) | | `Integration` is not `none`. `needs: changes`. Gated on `rust` or `schema`. |
-| `pnpm e2e:smoke` | e2e smoke | | `E2E smoke` is not `none`. `needs: changes`. Gated on `web` or `api`. Playwright's browser install, when the setup line names it, stays inside the script. |
+| `pnpm test:integration` | test (integration) | | `CI integration` is `yes`. `needs: changes`. Gated on `rust` or `schema`. `Integration` stays the local command. |
+| `pnpm e2e:smoke` | e2e smoke | | `CI e2e smoke` is `yes`. `needs: changes`. Gated on `web` or `api`. `E2E smoke` stays the local command. Playwright's browser install, when the setup line names it, stays inside the script. |
+| `pnpm prove:web` | prove (web) | | `apps/web` exists. `needs: changes`. Gated on `web`. The job checks the diff and the pull request body. It does not install dependencies, Playwright, or take screenshots. |
 | `pnpm test` | test (harness) | `harness` | `eval/flake.sh` and `eval/trials.sh`. This repo only. `needs: changes`. Gated on `harness`: `.helmsman/tools/**` or `eval/**`. In CI the script runs flake and then three trials. Locally it runs `eval/run.sh` once. |
 | `pnpm audit:all` | audit | | `needs: changes`. Gated on `audit`: a manifest or lockfile (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `Cargo.toml`, `Cargo.lock`, `pyproject.toml`, `uv.lock`, `deny.toml`, `rust-toolchain.toml`, `.nvmrc`). pnpm audit, the ESLint and Knip package lock audits, cargo audit, cargo deny, the secret scan, and toolchain freshness. |
-| `pnpm setup:check` | setup | | `needs: changes`. Gated on `setup`: `.helmsman/**`, `.github/**`, toolchain and workspace files, shell, and source. A docs-only diff does not set it. Setup fields, tool home, upstream pin, pnpm lock pin, web drift, shell syntax, silences, schema static checks, secrets, and `emit.sh --check`. |
+| `pnpm setup:check` | setup | | `needs: changes`. Gated on `setup`: `.helmsman/**`, `.github/**`, toolchain and workspace files, shell, and source. A docs-only diff does not set it. Setup fields, tool home, upstream pin, pnpm lock pin, web drift, shell syntax, silences, schema static checks, secrets, documented commands, env example names, `AGENTS.md` length, strict tsconfigs, and `emit.sh --check`. |
 | `pnpm diff:guard` | diff guard | | `needs: changes`. Gated on `guard`. A lockfile-only diff (`pnpm-lock.yaml`, `Cargo.lock`, `uv.lock`) does not set it. |
 | `pnpm plain:language` | diff guard | | Same job as `pnpm diff:guard`, as a second step. It does not add a billed minute. |
 | `pnpm lint:actions` | lint (actionlint) | | Every repository whose CI is GitHub. `needs: changes`. Gated on `workflows`: `.github/workflows/**` or `.github/actions/**`. |
@@ -63,8 +64,9 @@ Each Rust crate directory (`packages/*/rs`, including `packages/platform/rs`, an
 | Ruff | `pnpm lint`, filter `python` | lint (ruff) | `pnpm lint` | Lint and Ruff format | `pnpm format:check` runs Ruff only when `HELMSMAN_FILTER=python`. The CI format job for Python is the lint job. |
 | ty | `pnpm typecheck`, filter `python` | typecheck (ty) | `pnpm typecheck` | Python types | Skips when the project does not name ty. |
 | pytest | `pnpm test`, filter `python` | test (pytest) | `pnpm test` | Python unit tests | |
-| Integration | Not on the hook | test (integration), when `Integration` is not `none` | `pnpm test:integration` | Integration | Not inside `pnpm check`. Schema static checks still run in `pnpm setup:check` when this job is absent. |
-| E2E smoke | Not on the hook | e2e smoke, when `E2E smoke` is not `none` | `pnpm e2e:smoke` | Critical-path smoke | Not inside `pnpm check`. One runner. |
+| Integration | Not on the hook | test (integration), when `CI integration` is `yes` | `pnpm test:integration` | Integration | Not inside `pnpm check`. Schema static checks still run in `pnpm setup:check` when this job is absent. |
+| E2E smoke | Not on the hook | e2e smoke, when `CI e2e smoke` is `yes` | `pnpm e2e:smoke` | Critical-path smoke | Not inside `pnpm check`. One runner. |
+| Prove (web) | Not on the hook | prove (web), when `apps/web` exists and `web` is true | `pnpm prove:web` | A feature diff under `apps/web/` with no Playwright spec, or no prove section | The job does not take screenshots. Evidence stays under `.helmsman/reports/prove/`. |
 | Audit | Not on the hook | audit, when a manifest or lockfile changes | `pnpm audit:all` | High advisories, cargo deny, toolchain freshness, secrets | Network. Moved off the hook so the commit stays fast. Not inside `pnpm check`. |
 | Setup | When the staged files match the setup glob, including Markdown | setup, when `setup` is true | `pnpm setup:check` | Missing e2e smoke on an app, root `platform/`, a tool tree outside `.helmsman/tools/`, workflow drift | A docs-only pull request skips the CI job. Pre-commit still runs it, so a secret in Markdown is caught at commit. |
 | Diff guard | Any staged file except lockfiles | diff guard, when `guard` is true | `pnpm diff:guard` | An added line that suppresses a linter or skips a test | A lockfile-only diff does not run it. |

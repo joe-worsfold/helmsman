@@ -24,6 +24,14 @@ It then writes root files pinned to the publisher's current stable versions, wri
 
 It does not copy `eval/`, `docs/`, this README, or `.helmsman/tools/upstream/`.
 
+## Prerequisites
+
+Node 26.11.1, matching `.nvmrc` and `engines`. pnpm 12 through corepack. [bats](https://github.com/bats-core/bats-core) for the shell tests.
+
+```bash
+pnpm install --frozen-lockfile
+```
+
 ## Quick start
 
 Install the setup skill once, as a user skill:
@@ -99,6 +107,7 @@ Older repos used nautical names for these same checks. The old-to-new list is [d
 | Correct | Turns a repeated agent mistake into a check |
 | Decisions | One row per decision on a long run |
 | Bug | Reproduce a bug on the same surface, then fix it |
+| Prove | One claim, a baseline and a treatment, and the evidence under `.helmsman/reports/prove/` |
 | Performance | Measure a baseline, then change it |
 | Writing | Plain English for markdown, pull request bodies, and commits |
 | Checklist | Approve or Request changes. Findings are Blocker, Judo, High, Medium, Low, Fix forward, or Nit |
@@ -125,7 +134,7 @@ MIT. See [LICENSE](LICENSE). Third-party notices are in [THIRD_PARTY.md](THIRD_P
 | Source | What we took |
 | --- | --- |
 | [Ponytail](https://github.com/DietrichGebert/ponytail) v5.1.0, Dietrich Gebert | The reuse ladder, the reach list, the caller grep, and the `shortcut:` ceiling (older comments say `ponytail:`). Trust boundaries, data loss, security, and accessibility stay in scope. |
-| [Thermo-nuclear code quality review](https://github.com/cursor/plugins/blob/6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and [thermo-nuclear review](https://github.com/cursor/plugins/blob/6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf/thermos/skills/thermo-nuclear-review/SKILL.md) | The structural questions, and the developer-setup and feature-flag checks. A structural miss is Request changes. |
+| [Thermo-nuclear code quality review](https://github.com/cursor/plugins/blob/11713c683fe4add4fd403ea880580abbc9e0875f/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and [thermo-nuclear review](https://github.com/cursor/plugins/blob/11713c683fe4add4fd403ea880580abbc9e0875f/thermos/skills/thermo-nuclear-review/SKILL.md) | The structural questions, and the developer-setup and feature-flag checks. A structural miss is Request changes. |
 | [Factory Agent Readiness](https://docs.factory.ai/agent-readiness/overview) | The five readiness levels. A check counts only when a command or CI job fails the commit or the pull request. |
 | [DORA](https://dora.dev/guides/dora-metrics/) | Deployment frequency, lead time, change failure, and restore time. A number you cannot show stays unknown. |
 | [Software Engineering at Google, ch. 11](https://abseil.io/resources/swe-book/html/ch11.html) | If you liked it, put a test on it. Test size is how the test runs. |

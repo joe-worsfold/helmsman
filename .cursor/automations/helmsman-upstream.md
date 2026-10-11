@@ -48,4 +48,4 @@ Pull request: not opened (Upstream PR: no) | <url>
 
 ## Sources
 
-ponytail@v5.1.0 (`9cc65d03aa2da1db7121b912d03596409ee340b8`). cursor/plugins@`6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf`. MIT. The snapshot is `.helmsman/tools/upstream/`.
+ponytail@v5.1.0 (`9cc65d03aa2da1db7121b912d03596409ee340b8`). cursor/plugins@`11713c683fe4add4fd403ea880580abbc9e0875f`. MIT. The snapshot is `.helmsman/tools/upstream/`.

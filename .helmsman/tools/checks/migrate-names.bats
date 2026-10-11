@@ -71,6 +71,8 @@ seed_old() {
   grep -F -q 'Nightly max PRs: 3' .helmsman/setup.md
   grep -F -q 'Nightly max tokens: 200000' .helmsman/setup.md
   grep -F -q 'Nightly max minutes: 30' .helmsman/setup.md
+  grep -F -q 'CI integration: no' .helmsman/setup.md
+  grep -F -q 'CI e2e smoke: no' .helmsman/setup.md
   grep -F -q '1_helmsman-setup' lefthook.yml
   grep -F -q 'pnpm setup:check' lefthook.yml
   grep -F -q '!.helmsman/setup.md' .gitignore

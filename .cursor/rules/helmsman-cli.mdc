@@ -1,0 +1,17 @@
+---
+description: >-
+  Command-line tools an agent runs. Flags, help with one example, and a
+  dry run when the command writes or opens an issue.
+globs:
+  - ".helmsman/tools/**/*.sh"
+  - "**/bin/**"
+  - "**/cli/**"
+  - "src/bin/*.rs"
+alwaysApply: false
+---
+
+# Command line
+
+A command an agent runs accepts `--help` and prints one example. A failure goes to stderr and stops at the first error. Running the same command again is safe.
+
+When the command writes files or opens an issue, `--dry-run` prints the action and does not do it.

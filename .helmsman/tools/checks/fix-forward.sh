@@ -11,6 +11,7 @@ cd "$root"
 title=""
 body=""
 body_file=""
+dry=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --title)
@@ -25,8 +26,22 @@ while [[ $# -gt 0 ]]; do
       body_file="${2:-}"
       shift 2
       ;;
+    --dry-run)
+      dry=1
+      shift
+      ;;
+    --help|-h)
+      cat << 'EOF'
+Open one fix-forward issue, or print that action and do nothing.
+
+Examples:
+  fix-forward.sh --title "A leftover" --body "Wait."
+  fix-forward.sh --dry-run --title "A leftover" --body "Wait."
+EOF
+      exit 0
+      ;;
     *)
-      echo "helmsman: usage: fix-forward.sh --title TEXT (--body TEXT | --body-file PATH)" >&2
+      echo "helmsman: usage: fix-forward.sh [--dry-run] --title TEXT (--body TEXT | --body-file PATH)" >&2
       exit 2
       ;;
   esac
@@ -86,6 +101,11 @@ for row in rows:
 ' <<<"$existing")"
 if [[ -n "$match" ]]; then
   echo "helmsman: fix-forward already open (#${match})."
+  exit 0
+fi
+
+if [[ "$dry" -eq 1 ]]; then
+  echo "helmsman: dry-run would open: ${title}"
   exit 0
 fi
 

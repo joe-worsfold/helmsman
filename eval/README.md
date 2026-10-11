@@ -8,7 +8,7 @@ The harness does not load Cursor rules or skills into a model. `.helmsman/tools/
 
 ## Run
 
-From the repository root, with Node 20 or newer:
+From the repository root, with Node 26.11.1:
 
 ```bash
 ./eval/run.sh
@@ -65,6 +65,8 @@ From the repository root, with Node 20 or newer:
 | `devex_break` | An environment name or a `.listen(port)` number was removed, and no added migration note names it. Keeping the old name as a fallback is not this. |
 | `feature_leak` | A `FEATURE_`… gate was removed from a file and not put back. |
 | `hollow_test` | An added test line stubs the subject, or asserts `toBeDefined`, `toBeTruthy`, `toHaveBeenCalled`, an empty list, or `toBeGreaterThan(0)`. The test would still pass if every import returned nothing. |
+| `docs_drift` | `.helmsman/tools/checks/docs-commands.sh` on the work tree. A fenced command is missing, or a stated Node version disagrees with the pin. |
+| `env_missing` | `.helmsman/tools/checks/env-example.sh` on the work tree. A product env read has no `.env.example` line, or a value looks like a secret. |
 | `allowed_files` | The patch touches a file the scenario did not allow. Always on. |
 
 ## Later

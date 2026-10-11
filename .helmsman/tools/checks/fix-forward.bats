@@ -91,6 +91,15 @@ EOF
   grep -q "Fix forward" "$GH_LOG"
 }
 
+@test "dry-run prints the issue and does not create it" {
+  export GH_LABELS="fix-forward"
+  run "$checks/fix-forward.sh" --dry-run --title "A leftover" --body "Wait."
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"dry-run would open: A leftover"* ]]
+  ! grep -q "issue create" "$GH_LOG"
+  ! grep -q "label create" "$GH_LOG"
+}
+
 @test "a new title is created with the label" {
   export GH_LABELS="fix-forward"
   run "$checks/fix-forward.sh" --title "A leftover" --body "Wait."

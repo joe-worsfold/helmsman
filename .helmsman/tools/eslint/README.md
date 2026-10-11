@@ -45,6 +45,8 @@ This is a backstop, not a style guide. Lower a number to tighten. Do not raise o
 
 JavaScript files stay on the syntax gate when you use `typescript.js`.
 
+A switch on a union must handle every member. A type import is written apart from the value import. A runtime `import()` stays allowed.
+
 ## A tsc-only consumer
 
 A consumer whose web gate is `make web-check` may have no ESLint, Knip, Biome, or Prettier config. That gate is:

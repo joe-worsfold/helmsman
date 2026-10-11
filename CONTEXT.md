@@ -29,6 +29,9 @@ Copying the rules, skills, hook, and checks into a repository, and writing `.hel
 **Tests**
 Choosing an end-to-end smoke, an integration test, or a unit test before writing the test.
 
+**Prove**
+One claim on the same surface, with a baseline and a treatment. Evidence stays under `.helmsman/reports/prove/`.
+
 **Review**
 A pass over a pull request. It reads the checklist. It does not edit the code unless the author is finishing the pull request.
 

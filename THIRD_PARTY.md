@@ -36,7 +36,9 @@ SOFTWARE.
 ## Cursor plugins
 
 Repository: https://github.com/cursor/plugins
-The code-quality skill, the deep-review skill, and the deslop skill. The team-kit and thermos copies of the code-quality skill are the same bytes, so the pin keeps one. License files: `cursor-team-kit/LICENSE` and `thermos/LICENSE`. They are the same text. Deslop is the same commit and the same MIT licence.
+The code-quality skill, the deep-review skill, the deslop skill, the prove source, the CI loop skills, the command-line skill, the TypeScript rules, and the agent-compatibility notes. The team-kit and thermos copies of the code-quality skill are the same bytes, so the pin keeps one. License files: `cursor-team-kit/LICENSE`, `thermos/LICENSE`, `cli-for-agent/LICENSE`, and `agent-compatibility/LICENSE`. They are the same text. Deslop is the same MIT licence. Helmsman keeps its own wording.
+
+The agent-compatibility scanner is ISC, from `ericzakariasson/agent-compatibility` at 0.1.7, integrity `sha512-ZAViWvlUuhyV38KM+iExdld2w7x0QjkJkmCzLXZDsq4USRiq+BkjgsNfaM+v4htSDtAsHM90jsfYKmRGR/ivog==`. It is a tool the readiness skill runs. Its code is not copied into this repository.
 
 ```
 MIT License

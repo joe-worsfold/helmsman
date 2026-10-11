@@ -41,18 +41,74 @@
     {
       "name": "cursor-plugins",
       "repo": "cursor/plugins",
-      "ref": "6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf",
-      "commit": "6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf",
-      "date": "2026-05-28",
+      "ref": "11713c683fe4add4fd403ea880580abbc9e0875f",
+      "commit": "11713c683fe4add4fd403ea880580abbc9e0875f",
+      "date": "2026-10-11",
       "license": "MIT",
       "files": [
+        {
+          "path": "agent-compatibility/LICENSE",
+          "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0"
+        },
+        {
+          "path": "agent-compatibility/agents/compatibility-scan-review.md",
+          "sha256": "4ce59d99d3d882b8768abec5ff839dfe7ec055218507b49e8b89b76c94b40693"
+        },
+        {
+          "path": "agent-compatibility/agents/docs-reliability-review.md",
+          "sha256": "a0bb33ebc679b0ee0030580924c9d9915632af5e6fb41f6066346f2b688d48e8"
+        },
+        {
+          "path": "agent-compatibility/agents/startup-review.md",
+          "sha256": "4e713f4dac1997febf48c1a5bdab96e2a4454f7062fed3a0e1142b8d4cfefd36"
+        },
+        {
+          "path": "agent-compatibility/agents/validation-review.md",
+          "sha256": "38612d157dfd443955f2541248bf4b19fae1f50ee7e9fca0ab53c2f7060ce5cd"
+        },
+        {
+          "path": "agent-compatibility/skills/check-agent-compatibility/SKILL.md",
+          "sha256": "2391a06aec1bfb475690a9c386207e009090e35c624b5ca6cace3ea4c6705970"
+        },
+        {
+          "path": "cli-for-agent/LICENSE",
+          "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0"
+        },
+        {
+          "path": "cli-for-agent/skills/cli-for-agents/SKILL.md",
+          "sha256": "1cddd028d24ece48cd538fc1d84e49f5922dc8d04ee88caf12666b0557575e09"
+        },
         {
           "path": "cursor-team-kit/LICENSE",
           "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0"
         },
         {
+          "path": "cursor-team-kit/rules/no-inline-imports.mdc",
+          "sha256": "91bb4412f2775b386ddf6af0d235fbe8160907f6104c76928470fdf51be69edd"
+        },
+        {
+          "path": "cursor-team-kit/rules/typescript-exhaustive-switch.mdc",
+          "sha256": "58214625757c38b73fc3e66a715ea4b2ae609f6b3e285edc4393c5144430a8f4"
+        },
+        {
+          "path": "cursor-team-kit/skills/deslop/SKILL.md",
+          "sha256": "2f7b7def74af7ed11f5b44b4d32f0f91fca8c5d1f92bf2171e8d12fd33a0f810"
+        },
+        {
+          "path": "cursor-team-kit/skills/fix-ci/SKILL.md",
+          "sha256": "925f8c3e11de8bcc0cd015ec907f4d00b12cde6714246554ed3a52e096536522"
+        },
+        {
+          "path": "cursor-team-kit/skills/loop-on-ci/SKILL.md",
+          "sha256": "66b85dbd2bc3700386283539292a55438652bbe227271fd90b73b74525b9b9de"
+        },
+        {
           "path": "cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md",
           "sha256": "7faca08b51b643b2ddd0836f92af15574444024685dcc1e677dbbb39ae8c9e8f"
+        },
+        {
+          "path": "cursor-team-kit/skills/verify-this/SKILL.md",
+          "sha256": "c1c7b27c1133085bd3409c601ea12b6e6f61b4b23debcd52bc248fc01907e7de"
         },
         {
           "path": "thermos/LICENSE",
@@ -65,18 +121,22 @@
         {
           "path": "thermos/skills/thermos/SKILL.md",
           "sha256": "c272effc404b126d34464e8a1dacec30f6757638db39088ca5afc58dd2c1f472"
-        },
-        {
-          "path": "cursor-team-kit/skills/deslop/SKILL.md",
-          "sha256": "2f7b7def74af7ed11f5b44b4d32f0f91fca8c5d1f92bf2171e8d12fd33a0f810"
         }
       ],
       "adopted_in": [
+        ".cursor/automations/helmsman-upstream.md",
         ".cursor/rules/helmsman-checklist.mdc",
+        ".cursor/rules/helmsman-cli.mdc",
+        ".cursor/skills/helmsman-prove/SKILL.md",
+        ".cursor/skills/helmsman-readiness/SKILL.md",
         ".cursor/skills/helmsman-review/SKILL.md",
-        ".cursor/skills/helmsman-structure/SKILL.md",
         ".cursor/skills/helmsman-slop/SKILL.md",
-        ".cursor/automations/helmsman-upstream.md"
+        ".cursor/skills/helmsman-structure/SKILL.md",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".helmsman/tools/checks/fix-forward.sh",
+        ".helmsman/tools/eslint/typescript.js",
+        "AGENTS.md",
+        "docs/guardrails.md"
       ]
     },
     {
@@ -92,6 +152,10 @@
           "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
         },
         {
+          "path": "pstack/skills/blast-radius/SKILL.md",
+          "sha256": "2e10745b97f5862323dcda3b29ca60d56b5c3c98e37020085d26b48efbe0a436"
+        },
+        {
           "path": "pstack/skills/correct/SKILL.md",
           "sha256": "bf482bacc972b3f124a4af8bf9364b4b3e280cb5845e44c326ea4f4565e5c904"
         },
@@ -100,44 +164,36 @@
           "sha256": "25341c393f515c1e1fa9bce668b7551e9f98c195113a460ff524d3c1f7f50cd9"
         },
         {
-          "path": "pstack/skills/interrogate/references/rubric.md",
-          "sha256": "0f9c6bdb0b96e26dbde5f6407f417e0c02f54080e7a1268d8994f3c3ec6c5ac0"
-        },
-        {
           "path": "pstack/skills/interrogate/references/lead-judgment.md",
           "sha256": "6e5bdf5670eb34017692e9b6c546f36ac7552e6bb9f3f2f3429164fcc46a9361"
         },
         {
-          "path": "pstack/skills/blast-radius/SKILL.md",
-          "sha256": "2e10745b97f5862323dcda3b29ca60d56b5c3c98e37020085d26b48efbe0a436"
-        },
-        {
-          "path": "pstack/skills/principle-test-behavior-not-implementation/SKILL.md",
-          "sha256": "b2b73ba42920f9c3174ecdf808ec6e4591b3a9266ada9a05814f386004266d3a"
-        },
-        {
-          "path": "pstack/skills/poteto-mode/playbooks/opening-a-pr.md",
-          "sha256": "931070f5674e81a191277253d4e02b1c45d091b223f93bf506d3896a428a5967"
-        },
-        {
-          "path": "pstack/skills/poteto-mode/playbooks/shipping.md",
-          "sha256": "19f3f6803a7bbe9ff04f624b03e3b55f07ac0a05e991aa00d5fe51239b920b2a"
+          "path": "pstack/skills/interrogate/references/rubric.md",
+          "sha256": "0f9c6bdb0b96e26dbde5f6407f417e0c02f54080e7a1268d8994f3c3ec6c5ac0"
         },
         {
           "path": "pstack/skills/poteto-mode/playbooks/bug-fix.md",
           "sha256": "018bbc146ae19145caa6c7e70591fee081b64447dda1c1c4b681c9974d928b13"
         },
         {
+          "path": "pstack/skills/poteto-mode/playbooks/opening-a-pr.md",
+          "sha256": "931070f5674e81a191277253d4e02b1c45d091b223f93bf506d3896a428a5967"
+        },
+        {
           "path": "pstack/skills/poteto-mode/playbooks/perf-issue.md",
           "sha256": "2b88ad0f880e4d4d755ac19fe52414d6631d6baa816d060f53cf0a7429d7e14a"
         },
         {
-          "path": "pstack/skills/unslop/SKILL.md",
-          "sha256": "3126b9e2cf46022f5e0c332e84be5e17a9730669cb3d6ac0a7e5e7e94b1e24fa"
+          "path": "pstack/skills/poteto-mode/playbooks/shipping.md",
+          "sha256": "19f3f6803a7bbe9ff04f624b03e3b55f07ac0a05e991aa00d5fe51239b920b2a"
         },
         {
-          "path": "pstack/skills/technical-writing/SKILL.md",
-          "sha256": "61fe9c424a798ebf36ad94941f87be049cb8827bdf86d21474a0dde37b513c43"
+          "path": "pstack/skills/principle-fix-root-causes/SKILL.md",
+          "sha256": "ba4cd38da1dcc8fe5432feb64457cba95594736a9b21b2ebf8f8c52aee068707"
+        },
+        {
+          "path": "pstack/skills/principle-test-behavior-not-implementation/SKILL.md",
+          "sha256": "b2b73ba42920f9c3174ecdf808ec6e4591b3a9266ada9a05814f386004266d3a"
         },
         {
           "path": "pstack/skills/show-me-your-work/SKILL.md",
@@ -146,6 +202,14 @@
         {
           "path": "pstack/skills/show-me-your-work/scripts/log.sh",
           "sha256": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e"
+        },
+        {
+          "path": "pstack/skills/technical-writing/SKILL.md",
+          "sha256": "61fe9c424a798ebf36ad94941f87be049cb8827bdf86d21474a0dde37b513c43"
+        },
+        {
+          "path": "pstack/skills/unslop/SKILL.md",
+          "sha256": "3126b9e2cf46022f5e0c332e84be5e17a9730669cb3d6ac0a7e5e7e94b1e24fa"
         }
       ],
       "adopted_in": [

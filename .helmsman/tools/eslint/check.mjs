@@ -311,6 +311,36 @@ try {
     "typescript.js",
     "@typescript-eslint/no-floating-promises",
   );
+  await writeFile(
+    path.join(dir, "ts/kinds.ts"),
+    'export type Kind = "a" | "b";\nexport function value(): Kind {\n  return "a";\n}\n',
+  );
+  await expectClean(
+    dir,
+    "ts/switch-ok.ts",
+    'import type { Kind } from "./kinds";\nexport function label(kind: Kind): string {\n  switch (kind) {\n    case "a":\n      return "a";\n    case "b":\n      return "b";\n    default: {\n      const unreachable: never = kind;\n      return unreachable;\n    }\n  }\n}\n',
+    "typescript.js",
+  );
+  await expectRule(
+    dir,
+    "ts/switch-miss.ts",
+    'type Kind = "a" | "b";\nexport function label(kind: Kind): string {\n  switch (kind) {\n    case "a":\n      return "a";\n    default:\n      return "other";\n  }\n}\n',
+    "typescript.js",
+    "@typescript-eslint/switch-exhaustiveness-check",
+  );
+  await expectRule(
+    dir,
+    "ts/inline-import.ts",
+    'export function take(kind: import("./kinds").Kind): string {\n  return kind;\n}\n',
+    "typescript.js",
+    "@typescript-eslint/consistent-type-imports",
+  );
+  await expectClean(
+    dir,
+    "ts/dynamic-import.ts",
+    'export async function load(): Promise<string> {\n  const mod = await import("./kinds.js");\n  return mod.value();\n}\n',
+    "typescript.js",
+  );
 } finally {
   await rm(dir, { recursive: true, force: true });
 }
