@@ -402,4 +402,20 @@ printf '%s\n' 'a plain sentence' > "$tmp/new.md"
 track
 expect_exit 0 "$root/.helmsman/tools/checks/plain-language.sh" >/dev/null
 
+echo "lint filter: bash still syntax-checks"
+out="$(cd "$root" && HELMSMAN_FILTER=bash "$root/.helmsman/tools/checks/pnpm-task.sh" lint)"
+printf '%s\n' "$out" | grep -q 'bash -n ok.'
+
+echo "lint filter: typescript does not syntax-check shell"
+out="$(cd "$root" && HELMSMAN_FILTER=ts "$root/.helmsman/tools/checks/pnpm-task.sh" lint)"
+printf '%s\n' "$out" | grep -q 'no ESLint config'
+if printf '%s\n' "$out" | grep -q 'bash -n ok.'; then
+  echo "helmsman: typescript filter ran bash -n" >&2
+  exit 1
+fi
+
+echo "lint filter: an empty filter still syntax-checks shell"
+out="$(cd "$root" && HELMSMAN_FILTER= "$root/.helmsman/tools/checks/pnpm-task.sh" lint)"
+printf '%s\n' "$out" | grep -q 'bash -n ok.'
+
 echo "gates: ok"
