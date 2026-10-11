@@ -1,0 +1,14 @@
+diff --git a/src/server.js b/src/server.js
+index 0c69d4f..20267b8 100644
+--- a/src/server.js
++++ b/src/server.js
+@@ -3,6 +3,9 @@ import { parseQuery } from "./parse.js";
+ export function handle(method, path, query) {
+   if (method === "GET" && path === "/health") {
+     const parsed = parseQuery([], query);
++    if (query.banner) {
++      return { status: 200, body: { ok: true, banner: query.banner } };
++    }
+     return { status: 200, body: { ok: true, query: parsed } };
+   }
+   return { status: 404, body: { error: "not_found" } };

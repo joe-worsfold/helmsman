@@ -1,0 +1,22 @@
+diff --git a/REPORT.md b/REPORT.md
+new file mode 100644
+index 0000000..aaaaaaa
+--- /dev/null
++++ b/REPORT.md
+@@ -0,0 +1,4 @@
++# Report
++
++- pnpm test: not run
++- files changed: packages/orders/ts/src/total.js
+diff --git a/packages/orders/ts/src/total.js b/packages/orders/ts/src/total.js
+index 1111111..2222222 100644
+--- a/packages/orders/ts/src/total.js
++++ b/packages/orders/ts/src/total.js
+@@ -1,3 +1,7 @@
+ export function orderTotal(lines) {
+   return lines.reduce((sum, line) => sum + line.amount, 0);
+ }
++
++export function lineCount(lines) {
++  return lines.length;
++}

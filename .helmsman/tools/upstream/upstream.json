@@ -1,0 +1,167 @@
+{
+  "entries": [
+    {
+      "name": "ponytail",
+      "repo": "DietrichGebert/ponytail",
+      "ref": "v5.1.0",
+      "commit": "9cc65d03aa2da1db7121b912d03596409ee340b8",
+      "date": "2026-10-08",
+      "license": "MIT",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "fb1bc6909ac3ef82d5c22106e32ef682b0cff66788fa915fb9b53b15c9d2f3ab"
+        },
+        {
+          "path": "skills/ponytail/SKILL.md",
+          "sha256": "ba68ff26239c3c3b05b2a9a47ee0d9a6b93a69639a2555ec87a5d44bffaf2f0c"
+        },
+        {
+          "path": "skills/ponytail-review/SKILL.md",
+          "sha256": "33fe4ebe22a460924e5d4a261e223df22e409cc94ab76182bee9fb91a3ef022e"
+        },
+        {
+          "path": "skills/ponytail-audit/SKILL.md",
+          "sha256": "2b3223a02c386d1263e1b08343cb8eb3a53e444cdafb1d79e26c8ec2a8fcad28"
+        },
+        {
+          "path": "skills/ponytail-debt/SKILL.md",
+          "sha256": "63168f0e1475affb1211bc004261aa51a037f79e484571aae484bf27fe4d17c2"
+        }
+      ],
+      "adopted_in": [
+        ".cursor/rules/helmsman-standards.mdc",
+        ".cursor/rules/helmsman-checklist.mdc",
+        ".cursor/skills/helmsman-review/SKILL.md",
+        ".cursor/skills/helmsman-slop/SKILL.md",
+        ".cursor/skills/helmsman-shortcuts/SKILL.md",
+        ".cursor/skills/helmsman-fix-forward/SKILL.md"
+      ]
+    },
+    {
+      "name": "cursor-plugins",
+      "repo": "cursor/plugins",
+      "ref": "6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf",
+      "commit": "6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf",
+      "date": "2026-05-28",
+      "license": "MIT",
+      "files": [
+        {
+          "path": "cursor-team-kit/LICENSE",
+          "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0"
+        },
+        {
+          "path": "cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md",
+          "sha256": "7faca08b51b643b2ddd0836f92af15574444024685dcc1e677dbbb39ae8c9e8f"
+        },
+        {
+          "path": "thermos/LICENSE",
+          "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0"
+        },
+        {
+          "path": "thermos/skills/thermo-nuclear-review/SKILL.md",
+          "sha256": "5091011c4490932d40658ae958fb55b9aaca8e2bba5196860295ab945180e434"
+        },
+        {
+          "path": "thermos/skills/thermos/SKILL.md",
+          "sha256": "c272effc404b126d34464e8a1dacec30f6757638db39088ca5afc58dd2c1f472"
+        },
+        {
+          "path": "cursor-team-kit/skills/deslop/SKILL.md",
+          "sha256": "2f7b7def74af7ed11f5b44b4d32f0f91fca8c5d1f92bf2171e8d12fd33a0f810"
+        }
+      ],
+      "adopted_in": [
+        ".cursor/rules/helmsman-checklist.mdc",
+        ".cursor/skills/helmsman-review/SKILL.md",
+        ".cursor/skills/helmsman-structure/SKILL.md",
+        ".cursor/skills/helmsman-slop/SKILL.md",
+        ".cursor/automations/helmsman-upstream.md"
+      ]
+    },
+    {
+      "name": "pstack",
+      "repo": "cursor/plugins",
+      "ref": "978ca6e9c0e012047cd5058b8e829240336e704e",
+      "commit": "978ca6e9c0e012047cd5058b8e829240336e704e",
+      "date": "2026-10-10",
+      "license": "MIT",
+      "files": [
+        {
+          "path": "pstack/LICENSE",
+          "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+        },
+        {
+          "path": "pstack/skills/correct/SKILL.md",
+          "sha256": "bf482bacc972b3f124a4af8bf9364b4b3e280cb5845e44c326ea4f4565e5c904"
+        },
+        {
+          "path": "pstack/skills/interrogate/SKILL.md",
+          "sha256": "25341c393f515c1e1fa9bce668b7551e9f98c195113a460ff524d3c1f7f50cd9"
+        },
+        {
+          "path": "pstack/skills/interrogate/references/rubric.md",
+          "sha256": "0f9c6bdb0b96e26dbde5f6407f417e0c02f54080e7a1268d8994f3c3ec6c5ac0"
+        },
+        {
+          "path": "pstack/skills/interrogate/references/lead-judgment.md",
+          "sha256": "6e5bdf5670eb34017692e9b6c546f36ac7552e6bb9f3f2f3429164fcc46a9361"
+        },
+        {
+          "path": "pstack/skills/blast-radius/SKILL.md",
+          "sha256": "2e10745b97f5862323dcda3b29ca60d56b5c3c98e37020085d26b48efbe0a436"
+        },
+        {
+          "path": "pstack/skills/principle-test-behavior-not-implementation/SKILL.md",
+          "sha256": "b2b73ba42920f9c3174ecdf808ec6e4591b3a9266ada9a05814f386004266d3a"
+        },
+        {
+          "path": "pstack/skills/poteto-mode/playbooks/opening-a-pr.md",
+          "sha256": "931070f5674e81a191277253d4e02b1c45d091b223f93bf506d3896a428a5967"
+        },
+        {
+          "path": "pstack/skills/poteto-mode/playbooks/shipping.md",
+          "sha256": "19f3f6803a7bbe9ff04f624b03e3b55f07ac0a05e991aa00d5fe51239b920b2a"
+        },
+        {
+          "path": "pstack/skills/poteto-mode/playbooks/bug-fix.md",
+          "sha256": "018bbc146ae19145caa6c7e70591fee081b64447dda1c1c4b681c9974d928b13"
+        },
+        {
+          "path": "pstack/skills/poteto-mode/playbooks/perf-issue.md",
+          "sha256": "2b88ad0f880e4d4d755ac19fe52414d6631d6baa816d060f53cf0a7429d7e14a"
+        },
+        {
+          "path": "pstack/skills/unslop/SKILL.md",
+          "sha256": "3126b9e2cf46022f5e0c332e84be5e17a9730669cb3d6ac0a7e5e7e94b1e24fa"
+        },
+        {
+          "path": "pstack/skills/technical-writing/SKILL.md",
+          "sha256": "61fe9c424a798ebf36ad94941f87be049cb8827bdf86d21474a0dde37b513c43"
+        },
+        {
+          "path": "pstack/skills/show-me-your-work/SKILL.md",
+          "sha256": "bcff5f7f9fd23f92c12b251f9cd6b947e9485e1055cfacb6fdd9cae0789d7550"
+        },
+        {
+          "path": "pstack/skills/show-me-your-work/scripts/log.sh",
+          "sha256": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e"
+        }
+      ],
+      "adopted_in": [
+        ".cursor/skills/helmsman-correct/SKILL.md",
+        ".cursor/skills/helmsman-review/SKILL.md",
+        ".cursor/rules/helmsman-checklist.mdc",
+        ".cursor/skills/helmsman-tests/SKILL.md",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".cursor/rules/helmsman-writing.mdc",
+        ".cursor/skills/helmsman-decisions/SKILL.md",
+        ".cursor/skills/helmsman-bug/SKILL.md",
+        ".cursor/skills/helmsman-perf/SKILL.md",
+        ".helmsman/tools/checks/review-current.sh",
+        ".helmsman/tools/checks/decision-log.sh",
+        ".helmsman/tools/checks/fix-forward.sh"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+---
+description: Pull-request checklist. Approve or Request changes. Loaded only by review skills and automations.
+alwaysApply: false
+---
+
+# Checklist
+
+This file owns the verdict and the finding labels. Review the diff against `helmsman-standards.mdc` and matched file-scoped rules. Deterministic checks are authoritative; review does not replace them.
+
+Readiness is a different reading. The readiness scores capability, adapter, and evidence. End-to-end is three facts: local, pre-merge smoke, and post-deploy / full. Only the pre-merge smoke gates level 1. A path filter or a `run-e2e` label counts when that smoke can fail the pull request. The exhaustive suite does not replace it. A native command counts: `pnpm test:e2e`, Playwright, Cypress, Maestro, or a pull-request smoke job. A missing `.helmsman/setup.md`, Watch or Integration line, `e2e-smoke.sh`, `integration.sh`, or `languages.sh` does not fail that capability and does not stop the change. When a full install runs those adapters, name them. Do not stop a change to force Helmsman init.
+
+| Column | Meaning |
+| --- | --- |
+| Capability | `pass`, `fail`, `unknown`, or `n/a`. The score. |
+| Adapter | `helmsman`, `native`, or `absent`. Not the score. |
+| Evidence | The file or job that fails the commit or the pull request. |
+
+Readiness scores are not review verdicts.
+
+## Verdict
+
+A change gets one verdict. It uses GitHub's review words.
+
+- **Approve.** Ok to merge. No Blocker, no unjustified Judo, and no High or Medium finding. Leftovers may be Low, Fix forward, or Nit. Merge after checks.
+- **Request changes.** Do not merge until the named findings are fixed.
+
+## Finding labels
+
+A finding gets one label. The proof rung sits in the same row.
+
+- **Blocker.** A presumptive blocker. Fix it before merge. Any of: security, auth, or privacy; data loss or corruption; trust, wire-contract, or dependency-boundary violation; non-atomic half-state; a developer setup break with no migration note (a renamed environment variable, a moved port, a moved secrets path, or a new script the current workflow must run); a feature that was behind a flag and now runs without that flag; a user-visible journey with no end-to-end protected test; a pure function with no pure-unit protected test; gate bypass; infrastructure changed outside its declared tool; a regression this diff introduces; high-risk production, data, or infrastructure awaiting required human approval; in STAR, a lane violation (a file outside the branch's domain lane, a domain importing a domain, a write to a table not in `owns`, a hand-edited generated file or lockfile, or a `domain.json` that no longer matches the code); a reported result the commands that ran and the files that changed do not show. Not a finding: a missing pure-unit test on side-effecting code, or a missing test on a straight-line `scripts/` file. Require a test when that script enforces a CI gate. The absence of `.helmsman/setup.md`, a Watch or Integration line, `e2e-smoke.sh`, `integration.sh`, or `languages.sh` is not a finding. Installing ESLint, Knip, or a second Clippy file over an existing `make check`, `make lint`, `make web-check`, or root `package.json` `check` script is a gate bypass. The verdict is Request changes.
+- **Judo.** A restructuring that deletes complexity. Fix it before merge unless the comment says why the simpler shape is not available. Speculative structure should not ship. This change does not need it, or a smaller vehicle exists. Unjustified Judo means Request changes. A justified Judo can still Approve.
+- **High.** A correctness finding you traced end to end, and it is a real break. Do not use High for a guess or a narrow miss. High means Request changes.
+- **Medium.** A real correctness finding that is narrower than High. Medium means Request changes.
+- **Low.** A real finding that can wait. Low does not request changes by itself.
+- **Fix forward.** Deferred. Pre-existing complexity this diff did not worsen, a named ceiling or follow-up, or added structure that ships with explicit debt. The fix-forward script opens a `fix-forward` issue. Fix forward does not request changes.
+- **Nit.** Cosmetic. Optional. A Nit does not request changes.
+
+For added structure, endorse only when all hold: it deletes reader concepts, branches, or lines; this diff needs it; and it is the smallest vehicle. Failure alone is Judo, or Approve with Fix forward and explicit debt. Never use Blocker without an independent critical reason.
+
+Also Judo, when you can show a concrete case: a reframing that would delete the branches this diff added; a refactor that moves code and does not reduce the concepts a reader must hold; an ad-hoc conditional in a flow this change does not own; a cast, extra optionality, or a silent fallback that hides an invariant the type could name; related writes that could be one write, when that half-applied state is not yet data loss. Data loss stays Blocker. A structural miss is Judo on its own. A simpler shape that needs another lane is a Handoff, not an edit in this diff.
+
+## Required assessment
+
+Before calling a change Approve, assess touched logic for:
+
+1. Empty input: absent values and empty collections at trust boundaries.
+2. Boundary values: min and max, off-by-one, enum edges, optional and required.
+3. Concurrency and state: races, partial writes, idempotency, stale reads, retries.
+
+State N/A when the diff cannot affect one.
+
+For infrastructure, deploy, credentials, or migrations also assess blast radius, least privilege, reversibility and idempotency, canary, rollback, or kill switch, alerts and SLOs, and post-deploy verification. High-risk production, data, or infrastructure changes are a Blocker when policy requires human approval.
+
+## Evidence
+
+Verify against `path:line`. Every finding needs a concrete case: this input or this situation, and the wrong result. No case, no finding. Every finding also names how far the proof got: said, cited (`path:line`), excluded (the bad case cannot happen), ran (a command showed it), or reproduced (it happened in the running app). Said is not a finding. A Blocker on security, data loss, or a gate bypass needs ran or reproduced, or one sentence on why a run was not possible. Drop unconfirmed candidates. Prefer few high-conviction findings. Do the correctness pass yourself, including when no automated bug review is installed: callers of every changed function, empty and boundary values, and a fix applied in one caller while the shared function stays broken. After that pass, do not restate a comment automated review already posted. If none is posted, the correctness findings stay here. Still classify standards, boundaries, tests, gate bypass, and release safety.
+
+High, Medium, and Low keep that same proof rung beside the priority. A finding you have not finished tracing is not a finding.
+
+A deliberate, well-scoped removal is not a finding when that removal is the job, unless the blast is wider than the change says or the change looks malicious. A `shortcut:` comment, or an older `ponytail:` comment, that names its ceiling is a decision, not a finding, unless the load you assumed already crosses that ceiling.
+
+State the load you assumed, from the README or the deploy config. One line.
+
+Sources: ponytail@v5.1.0 (`9cc65d03aa2da1db7121b912d03596409ee340b8`) `skills/ponytail-review/SKILL.md`. cursor/plugins@`6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf` `thermos/skills/thermo-nuclear-review/SKILL.md` and `cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md`. cursor/plugins@`978ca6e9c0e012047cd5058b8e829240336e704e` `pstack/skills/blast-radius/SKILL.md` (how far the proof got). MIT.

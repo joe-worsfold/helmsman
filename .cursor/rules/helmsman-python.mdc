@@ -1,0 +1,12 @@
+---
+description: Python tool gate. Loads for Python and uv projects.
+globs:
+  - "**/*.py"
+  - "**/pyproject.toml"
+  - "**/uv.lock"
+alwaysApply: false
+---
+
+# Python
+
+`.helmsman/tools/python/check.sh` runs `uv lock --check`, `ruff`, `ty` when the project names it, and `pytest` when tests are tracked. A project ruff config stays. Ceilings in `.helmsman/tools/python/ruff.toml` are a floor: complexity 10, arguments 6, statements 50. A higher number fails. A lower number stays. This gate does not start Postgres.

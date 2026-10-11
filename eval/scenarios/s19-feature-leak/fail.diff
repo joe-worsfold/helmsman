@@ -1,0 +1,11 @@
+diff --git a/src/listen.js b/src/listen.js
+index 611270c..b150eb3 100644
+--- a/src/listen.js
++++ b/src/listen.js
+@@ -7,6 +7,5 @@ export function bind(server) {
+ }
+ 
+ export function banner() {
+-  if (process.env.FEATURE_BANNER !== "on") return "";
+   return "ahoy";
+ }

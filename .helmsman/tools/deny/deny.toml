@@ -1,0 +1,18 @@
+# Helmsman dependency gate.
+# Copy this file to the crate root. .helmsman/tools/checks/languages.sh runs:
+#   cargo audit
+#   cargo deny check advisories bans sources
+#
+# Licenses are not in this file. An allow-list is project policy.
+# cargo deny check  (every check, including licenses) is not the Helmsman command.
+# A git dependency or another registry is an edit to this file.
+
+[advisories]
+yanked = "deny"
+
+[bans]
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

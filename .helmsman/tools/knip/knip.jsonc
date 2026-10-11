@@ -1,0 +1,43 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Knip's default report, plus import cycles as errors.
+  // nsExports and nsTypes stay out; Knip excludes them unless you add them.
+  "include": [
+    "files",
+    "dependencies",
+    "devDependencies",
+    "optionalPeerDependencies",
+    "unlisted",
+    "binaries",
+    "unresolved",
+    "exports",
+    "types",
+    "enumMembers",
+    "namespaceMembers",
+    "duplicates",
+    "catalog",
+    "catalogReferences",
+    "cycles"
+  ],
+  "rules": {
+    "cycles": "error"
+  },
+  "ignoreFiles": [
+    "dist/**",
+    "build/**",
+    "coverage/**",
+    "cdk.out/**",
+    ".next/**"
+  ],
+  // The gate's own files are not the product. Knip 6 walks dot-directories
+  // (tinyglobby dot: true), and this tree is not gitignored, so these
+  // patterns are what keep the harness out of the product report.
+  "ignore": [
+    ".helmsman/tools/eslint/**",
+    ".helmsman/tools/knip/**",
+    ".helmsman/tools/checks/**",
+    ".helmsman/tools/clippy/**",
+    ".helmsman/tools/python/**",
+    ".helmsman/tools/ci/**"
+  ]
+}

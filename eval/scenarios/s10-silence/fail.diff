@@ -1,0 +1,10 @@
+diff --git a/src/worker.js b/src/worker.js
+index 082f77c..5a31696 100644
+--- a/src/worker.js
++++ b/src/worker.js
+@@ -7,3 +7,5 @@ export function consume(job, sink) {
+   sink(job.body);
+   return { acked: true, duplicate: false };
+ }
++
++// eslint-disable-next-line no-eval

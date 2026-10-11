@@ -1,0 +1,18 @@
+---
+description: TypeScript tool gate. Loads for TypeScript files.
+globs:
+  - "**/*.{ts,tsx,mts,cts}"
+alwaysApply: false
+---
+
+# TypeScript
+
+Policy stays in `helmsman-standards.mdc`. This file is the TypeScript tool only.
+
+`make web-check` typechecks with `tsc --noEmit` (`strict`, `noUnusedLocals`, `noUnusedParameters`). Stories stay out of that project. `web-theme-check` and generated-type drift stay in that command. Do not install ESLint when the repo has no ESLint config.
+
+`.helmsman/tools/tsc/check.sh` is optional. It runs a `tsc` typecheck and does not install ESLint. A consumer `make web-check`, `make check`, or root `package.json` `check` script owns that typecheck. Do not opt those trees into ESLint.
+
+`.helmsman/tools/eslint/typescript.js` is opt-in. When a root config references it, `any` and an unhandled promise fail. Do not turn those rules off. A generated Nest config turns `no-explicit-any` off. This gate does not. Ceilings live in `.helmsman/tools/eslint/index.js`. Lower a number to tighten. Do not raise one so a commit passes.
+
+A value the type system can name is a type. Parse untrusted input once, with the schema already in the repo.

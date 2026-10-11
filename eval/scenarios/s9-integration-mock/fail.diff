@@ -1,0 +1,14 @@
+diff --git a/test/invoice.int.test.js b/test/invoice.int.test.js
+new file mode 100644
+index 0000000..fdbdd7d
+--- /dev/null
++++ b/test/invoice.int.test.js
+@@ -0,0 +1,8 @@
++import test, { mock } from "node:test";
++import { consume } from "../src/worker.js";
++
++test("invoice job", () => {
++  const sink = { push() {} };
++  mock.method(sink, "push");
++  consume({ id: "1", body: "ok", seen: new Set() }, sink.push);
++});

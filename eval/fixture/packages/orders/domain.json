@@ -1,0 +1,8 @@
+{
+  "name": "orders",
+  "description": "order totals for the eval fixture",
+  "owns": ["order"],
+  "reads": ["customer"],
+  "exposes": [],
+  "storage": "surreal"
+}

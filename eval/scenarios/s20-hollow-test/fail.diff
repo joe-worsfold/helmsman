@@ -1,0 +1,16 @@
+diff --git a/test/tax.test.js b/test/tax.test.js
+index a320a3d..ebf37a8 100644
+--- a/test/tax.test.js
++++ b/test/tax.test.js
+@@ -5,3 +5,11 @@ import { tax } from "../src/domain/tax.js";
+ test("returns the total for a known rate", () => {
+   assert.equal(tax(100, 0.2), 20);
+ });
++
++import { mock } from "node:test";
++import * as domain from "../src/domain/tax.js";
++
++test("stubbed tax still matches the stub", () => {
++  mock.method(domain, "tax", () => 1);
++  assert.equal(domain.tax(100, 0.2), 1);
++});

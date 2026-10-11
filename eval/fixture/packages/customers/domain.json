@@ -1,0 +1,8 @@
+{
+  "name": "customers",
+  "description": "customer names for the eval fixture",
+  "owns": ["customer"],
+  "reads": [],
+  "exposes": [],
+  "storage": "surreal"
+}

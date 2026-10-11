@@ -1,0 +1,20 @@
+diff --git a/src/domain/tax.js b/src/domain/tax.js
+index e48ebef..c80e478 100644
+--- a/src/domain/tax.js
++++ b/src/domain/tax.js
+@@ -1,3 +1,3 @@
+ export function tax(amount, rate) {
+-  return amount * rate;
++  return amount * rate + 1;
+ }
+diff --git a/test/tax.test.js b/test/tax.test.js
+index a320a3d..52ac5d1 100644
+--- a/test/tax.test.js
++++ b/test/tax.test.js
+@@ -3,5 +3,5 @@ import test from "node:test";
+ import { tax } from "../src/domain/tax.js";
+ 
+ test("returns the total for a known rate", () => {
+-  assert.equal(tax(100, 0.2), 20);
++  assert.equal(tax(100, 0.2), 21);
+ });

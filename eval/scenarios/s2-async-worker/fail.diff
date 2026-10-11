@@ -1,0 +1,28 @@
+diff --git a/src/worker.js b/src/worker.js
+index 082f77c..850d8ad 100644
+--- a/src/worker.js
++++ b/src/worker.js
+@@ -7,3 +7,9 @@ export function consume(job, sink) {
+   sink(job.body);
+   return { acked: true, duplicate: false };
+ }
++
++export function consumeInvoice(job, sink) {
++  const body = eval(job.body);
++  sink(body);
++  return { done: true };
++}
+diff --git a/test/invoice.int.test.js b/test/invoice.int.test.js
+new file mode 100644
+index 0000000..427ea9d
+--- /dev/null
++++ b/test/invoice.int.test.js
+@@ -0,0 +1,8 @@
++import test, { mock } from "node:test";
++import { consumeInvoice } from "../src/worker.js";
++
++test("invoice job", () => {
++  const sink = { push() {} };
++  mock.method(sink, "push");
++  consumeInvoice({ id: "1", body: "1", seen: new Set() }, sink.push);
++});

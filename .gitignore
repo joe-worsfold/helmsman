@@ -1,0 +1,12 @@
+# Reports stay gitignored so findings are not committed.
+# The harness is tracked under .helmsman/tools. The star ignores every
+# other child of .helmsman, including reports. The tools exceptions are
+# required: git will not descend into an ignored directory.
+# node_modules/ stays after the tools exception. The last match wins,
+# so a package install under the harness is not committed.
+.helmsman/*
+!.helmsman/setup.md
+!.helmsman/tools/
+!.helmsman/tools/**
+node_modules/
+.eslintcache

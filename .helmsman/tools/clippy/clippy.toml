@@ -1,0 +1,20 @@
+# Helmsman Clippy thresholds.
+# Copy to the crate root only when clippy.toml and .clippy.toml are both absent.
+# Do not replace a file that is already there.
+# .helmsman/tools/checks/rust-workspace.sh points CLIPPY_CONF_DIR here only in that case.
+#
+# Levels live in workspace-lints.toml, not in this file.
+# Pedantic stays warn. These numbers are a floor. Do not raise them.
+# .helmsman/tools/clippy/floor.sh skips the copy when clippy.toml or a lint table exists.
+
+# restriction. Clippy default 25.
+cognitive-complexity-threshold = 15
+
+# pedantic. Clippy default 100.
+too-many-lines-threshold = 50
+
+# complexity. Clippy default 7.
+too-many-arguments-threshold = 6
+
+# complexity. Clippy default 250.
+type-complexity-threshold = 250

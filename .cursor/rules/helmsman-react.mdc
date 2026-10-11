@@ -1,0 +1,16 @@
+---
+description: React. Loads for JSX and TSX.
+globs:
+  - "**/*.{jsx,tsx}"
+alwaysApply: false
+---
+
+# React
+
+One component, one job. Load data in the route or the event that asked for it. An effect that only fetches is the wrong layer.
+
+A list key is a stable id when the list can reorder.
+
+Do not silence the hooks dependency rule. Fix the dependency, or move the work to the event.
+
+Hooks stay at the top level of the component.

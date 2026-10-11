@@ -1,0 +1,13 @@
+diff --git a/src/listen.js b/src/listen.js
+index 611270c..e295365 100644
+--- a/src/listen.js
++++ b/src/listen.js
+@@ -3,7 +3,7 @@ export function listenPort() {
+ }
+ 
+ export function bind(server) {
+-  return server.listen(3000);
++  return server.listen(4000);
+ }
+ 
+ export function banner() {

@@ -1,0 +1,8 @@
+diff --git a/.helmsman/setup.md b/.helmsman/setup.md
+--- a/.helmsman/setup.md
++++ b/.helmsman/setup.md
+@@ -9,3 +9,4 @@ Issues: github
+ CI: github
+ File issues: no
+ Fix: no
++Integration: none

@@ -1,0 +1,12 @@
+diff --git a/src/listen.js b/src/listen.js
+index 611270c..6b3664b 100644
+--- a/src/listen.js
++++ b/src/listen.js
+@@ -1,5 +1,6 @@
+ export function listenPort() {
+-  return Number(process.env.PORT ?? 3000);
++  // migration: LISTEN_PORT replaces PORT
++  return Number(process.env.LISTEN_PORT ?? process.env.PORT ?? 3000);
+ }
+ 
+ export function bind(server) {

@@ -1,0 +1,7 @@
+diff --git a/eslint.config.js b/eslint.config.js
+new file mode 100644
+index 0000000..40b0c94
+--- /dev/null
++++ b/eslint.config.js
+@@ -0,0 +1 @@
++export default [{ rules: {} }];

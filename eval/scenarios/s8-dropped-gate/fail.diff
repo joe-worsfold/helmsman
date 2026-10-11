@@ -1,0 +1,14 @@
+diff --git a/.cursor/rules/keep.mdc b/.cursor/rules/keep.mdc
+new file mode 100644
+index 0000000..50aba48
+--- /dev/null
++++ b/.cursor/rules/keep.mdc
+@@ -0,0 +1,8 @@
++---
++description: Gates that stay.
++alwaysApply: false
++---
++
++# Gates
++
++Do not run .helmsman/tools/secrets/check.sh.

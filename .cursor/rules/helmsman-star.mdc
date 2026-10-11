@@ -1,0 +1,78 @@
+---
+description: STAR setup. SurrealDB, TypeScript, Agent-first, Rust. pnpm, Turborepo, SST v4 modulith with strict domain lanes. Consult before creating, moving, or editing code, or adding a domain, table, index, route, MCP tool, dependency, or package.
+alwaysApply: true
+---
+
+# STAR setup
+
+STAR is SurrealDB, TypeScript, Agent-first, Rust. A modulith: one repo, one SurrealDB graph, strict domain lanes. The stack is fixed: pnpm, Turborepo, SST v4. Rust for domains, API, and MCP. TypeScript for web (Vite, React) and mobile (Expo), and Python (uv, ruff, ty) for data science, only where a domain needs them. Versions are the publisher's latest stable, pinned by lockfiles and toolchain files. Never change a tool version as a side effect of a task.
+
+## Layout
+
+```
+sst.config.ts                 dynamic imports only; no resources, no routes
+apps/
+  web/                        Vite + React; generated TS only
+  mobile/                     Expo, when the product has a mobile app; generated TS only
+  api/src/routes/<domain>.rs  -> /api/<domain>/*
+  mcp/src/tools/<domain>.rs   -> /mcp/<domain>  (one MCP server per domain)
+  mcp/src/tools/composite.rs  -> /mcp/composite (cross-domain tools)
+  agent/                      chat backend: routes questions to MCP servers
+  workflows/                  async pipelines and orchestration
+  <app>/infra.ts              each app owns its infra
+packages/<domain>/            domains only
+  domain.json  AGENTS.md  infra.ts (only if the domain owns infra)
+  rs/ ts/ py/                 toolchain roots, only those needed
+packages/platform/rs          shared kernel: SurrealDB client, config, ids, auth/error/tracing
+                              middleware, model and embedding clients, decision-record helper
+                              imports no domain; domains use only its public API
+.helmsman/tools/               Helmsman gates; copied by helmsman-setup, never edited in a lane
+```
+
+`domain.json`:
+
+```json
+{ "name": "orders", "description": "one line: when to use this domain (feeds agent routing)",
+  "owns": ["order", "line_item"], "reads": ["customer"], "exposes": ["api", "mcp"],
+  "storage": "surreal" }
+```
+
+## Lanes
+
+Parallel agents work as if each domain were its own repo.
+
+1. **One lane per task.** One git worktree and branch per task: `agent/<domain>/<task>`. Edit only `packages/<domain>/` and your slice of each app (`routes/<domain>.rs`, `tools/<domain>.rs`, that domain's screens). A change needed elsewhere is not made. It goes in the `Handoff` section of the pull request.
+2. **Lane context.** Read `packages/<domain>/AGENTS.md` and `domain.json` first. For a domain in `reads`, read only its public exports, not its internals.
+3. **No shared hotspots.** `pnpm-workspace.yaml` and the Cargo workspace use globs, so adding a domain edits no root file. The change that adds the first Rust crate writes `Cargo.toml` (`resolver = "3"`, `members = ["packages/*/rs"]`, `[workspace.lints]` from `.helmsman/tools/clippy/workspace-lints.toml`, `edition` and `rust-version` from `rust-toolchain.toml`). The glob `packages/*/rs` includes the shared kernel at `packages/platform/rs`. Do not add a root `platform` member. Each Rust app (`apps/api`, `apps/mcp`) joins `members` once, when created. Cargo fails on a member glob that matches nothing. After a rebase, regenerate lockfiles (`pnpm install`, `cargo generate-lockfile` only if `Cargo.lock` conflicts) and generated files (`pnpm turbo run generate`). Never hand-resolve a conflict in a lockfile or a generated file.
+
+## Rules
+
+1. **Domains never import domains.** Apps import a domain's public exports only (the crate's `pub` API, the package `exports`, `__init__`). Each `api` and `mcp` domain file imports exactly one domain. Only `workflows`, `agent`, and `mcp/composite` may combine domains. Apps hold wiring and sequencing, never domain rules.
+2. **Data.** Write only tables in `owns`. Read only `owns` plus `reads`. Links to other domains' records are free. One exception: the append-only `agent_run` and `decision` tables. Anyone may insert through the platform helper. Nobody updates or deletes.
+3. **Storage.** `surreal` by default. Aurora, DynamoDB, or OpenSearch need a one-line reason in `domain.json` and belong to that domain alone.
+4. **Schemas.** Rust types are the source (serde, utoipa). TS and Python types are generated, never hand-edited. A domain with no Rust uses TS as its single source.
+5. **Generated files.** Commit per-domain spec fragments, never a merged spec. Merged OpenAPI and clients are build artifacts.
+6. **Manifest first.** A new table, read, index, or exposed surface updates `domain.json` in the same change. Add a domain only for a distinct ownership lane.
+7. **Shared code.** The shared kernel is `packages/platform/rs`. It lives in packages, imports no domain, and domains use only its public API. Put code there only when two or more domains need it and it has no business logic. Otherwise duplicate. Do not create a root `platform/` crate. A re-setup moves a root `platform/` crate to `packages/platform/rs` and drops the workspace entry. It does not recreate `platform/`.
+8. **Infra.** `sst.config.ts` imports each `infra.ts` inside `run()` by relative path. Routes and path prefixes are registered in the owning app's `infra.ts`. Link resources only to the owner's functions. Each agent has its own service identity. Never reuse a person's token.
+9. **Agents.** Models and embeddings via Bedrock in deployed stages. Ollama is allowed locally, behind the platform model and embedding clients. Domains and apps never call a provider directly. The `agent` app connects to MCP servers as its own client over private endpoints and routes by `domain.json` descriptions. Database-level MCP servers (SurrealMCP, embedded MCP) are dev and ops only, never in a production agent's toolset.
+
+Indexes, vectors, embeddings, search, enrichment, and entity resolution: read `.cursor/rules/helmsman-data.mdc` before touching them.
+
+## Tooling
+
+- pnpm only. One Cargo workspace, one uv workspace. Node's pin is `.nvmrc`. Do not write `.node-version`.
+- Every package exposes `build`, `lint`, `typecheck`, `test`. Cargo and uv are wrapped in a `package.json` script.
+- Scoped run: `pnpm turbo run lint typecheck test --filter='./packages/<domain>/*'`. CI uses `--affected`.
+- End-to-end: Playwright for web, Maestro for mobile. One runner per surface.
+- `CODEOWNERS` maps `packages/<domain>/` to owners. Never widen your own access.
+
+## Done means
+
+The scoped lint, typecheck, and test ran and passed. Generated files are fresh. `domain.json` matches the code. Nothing outside your lane changed. Cross-domain needs are in the `Handoff`.
+
+## Review before ready
+
+Every agent PR finishes in order: (1) run helmsman-review on the full diff against base, (2) fix every Blocker, unjustified Judo, High, and Medium finding, (3) prove it locally with the pre-commit hook and `pnpm check`, (4) post the review as a pull request comment saying what was fixed and what remains Fix forward or Nit and why, (5) mark ready only after that comment. Marking ready is when CI runs. Do not merge until that run is green. The review catches what the standards missed, including when the change was written to them.
+
+Agents work in draft. Prove the change locally with `pnpm check` and the pre-commit hook before pushing. CI runs when the pull request is marked ready, and on push to main. A draft pull request does not run CI.

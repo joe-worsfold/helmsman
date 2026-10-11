@@ -1,0 +1,23 @@
+diff --git a/e2e/invoice.e2e.js b/e2e/invoice.e2e.js
+new file mode 100644
+index 0000000..439e081
+--- /dev/null
++++ b/e2e/invoice.e2e.js
+@@ -0,0 +1,8 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { renderInvoice } from "../src/pages/invoice.js";
++
++test("invoice journey shows the page", () => {
++  const html = renderInvoice();
++  assert.match(html, /data-testid="invoice-page-region"/);
++});
+diff --git a/src/pages/invoice.js b/src/pages/invoice.js
+new file mode 100644
+index 0000000..f875d22
+--- /dev/null
++++ b/src/pages/invoice.js
+@@ -0,0 +1,3 @@
++export function renderInvoice() {
++  return '<main data-testid="invoice-page-region"><h1>Invoice</h1></main>';
++}

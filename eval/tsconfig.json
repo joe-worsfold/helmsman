@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "failure-text.mjs",
+    "quarantine.mjs",
+    "failure-text.test.mjs",
+    "quarantine.test.mjs",
+    "readiness.mjs",
+    "readiness.test.mjs"
+  ]
+}

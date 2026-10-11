@@ -1,0 +1,140 @@
+# Same scripts as CI. Each command has a glob or an exclude, so a commit runs
+# only the checks for the file types it stages.
+# gobwas/glob: `*` does not cross a slash, and `**/*` does not match a root file.
+# Each filter lists the root form and the nested form.
+# .helmsman and eval stay out of the product TypeScript commands.
+pre-commit:
+  piped: true
+  commands:
+    1_helmsman-setup:
+      glob:
+        - "*.{sh,bash,yml,yaml,json,toml,rs,py,js,jsx,ts,tsx,mjs,cjs,mts,cts,surql,sql,md,mdc}"
+        - "**/*.{sh,bash,yml,yaml,json,toml,rs,py,js,jsx,ts,tsx,mjs,cjs,mts,cts,surql,sql,md,mdc}"
+        - ".nvmrc"
+        - "**/.nvmrc"
+        - ".python-version"
+        - "**/.python-version"
+        - "rust-toolchain.toml"
+        - "**/rust-toolchain.toml"
+        - "lefthook.yml"
+        - ".helmsman/**"
+        - ".github/**"
+      exclude:
+        - "pnpm-lock.yaml"
+        - "**/pnpm-lock.yaml"
+        - "Cargo.lock"
+        - "**/Cargo.lock"
+        - "uv.lock"
+        - "**/uv.lock"
+      run: pnpm setup:check
+    2_helmsman-diff-guard:
+      glob:
+        - "*"
+        - "**/*"
+      exclude:
+        - "pnpm-lock.yaml"
+        - "**/pnpm-lock.yaml"
+        - "Cargo.lock"
+        - "**/Cargo.lock"
+        - "uv.lock"
+        - "**/uv.lock"
+      run: pnpm diff:guard
+    2b_helmsman-plain-language:
+      glob:
+        - "*"
+        - "**/*"
+      exclude:
+        - "pnpm-lock.yaml"
+        - "**/pnpm-lock.yaml"
+        - "Cargo.lock"
+        - "**/Cargo.lock"
+        - "uv.lock"
+        - "**/uv.lock"
+      run: pnpm plain:language
+    3_helmsman-lint-ts:
+      glob:
+        - "*.{js,jsx,ts,tsx,mjs,cjs}"
+        - "**/*.{js,jsx,ts,tsx,mjs,cjs}"
+      exclude:
+        - ".helmsman/**"
+        - "eval/**"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=ts pnpm lint
+    4_helmsman-format-ts:
+      glob:
+        - "*.{js,jsx,ts,tsx,mjs,cjs,json,css}"
+        - "**/*.{js,jsx,ts,tsx,mjs,cjs,json,css}"
+      exclude:
+        - ".helmsman/**"
+        - "eval/**"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=ts pnpm format:check
+    5_helmsman-typecheck-ts:
+      glob:
+        - "*.{ts,tsx}"
+        - "**/*.{ts,tsx}"
+      exclude:
+        - ".helmsman/**"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=ts pnpm typecheck
+    6_helmsman-typecheck-harness:
+      glob:
+        - "eval/*.{ts,tsx,mjs}"
+        - "eval/**/*.{ts,tsx,mjs}"
+        - "eval/tsconfig.json"
+      run: pnpm typecheck
+    7_helmsman-unused:
+      glob:
+        - "*.{js,jsx,ts,tsx,mjs,cjs}"
+        - "**/*.{js,jsx,ts,tsx,mjs,cjs}"
+      exclude:
+        - ".helmsman/**"
+        - "eval/**"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=ts pnpm unused
+    8_helmsman-test-ts:
+      glob:
+        - "*.{js,jsx,ts,tsx,mjs,cjs}"
+        - "**/*.{js,jsx,ts,tsx,mjs,cjs}"
+      exclude:
+        - ".helmsman/**"
+        - "eval/**"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=ts pnpm test
+    9_helmsman-lint-rust:
+      glob:
+        - "*.rs"
+        - "**/*.rs"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=rust pnpm lint
+    10_helmsman-format-rust:
+      glob:
+        - "*.rs"
+        - "**/*.rs"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=rust pnpm format:check
+    11_helmsman-test-rust:
+      glob:
+        - "*.rs"
+        - "**/*.rs"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=rust pnpm test
+    12_helmsman-lint-python:
+      glob:
+        - "*.py"
+        - "**/*.py"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=python pnpm lint
+    13_helmsman-typecheck-python:
+      glob:
+        - "*.py"
+        - "**/*.py"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=python pnpm typecheck
+    14_helmsman-test-python:
+      glob:
+        - "*.py"
+        - "**/*.py"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=python pnpm test
+    15_helmsman-lint-bash:
+      glob:
+        - "*.sh"
+        - "**/*.sh"
+      run: HELMSMAN_AFFECTED=1 HELMSMAN_FILTER=bash pnpm lint
+    16_helmsman-lint-actions:
+      glob:
+        - ".github/workflows/*"
+        - ".github/workflows/**"
+        - ".github/actions/*"
+        - ".github/actions/**"
+      run: pnpm lint:actions

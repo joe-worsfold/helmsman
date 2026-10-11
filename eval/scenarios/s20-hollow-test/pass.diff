@@ -1,0 +1,12 @@
+diff --git a/test/tax.test.js b/test/tax.test.js
+index a320a3d..95bb836 100644
+--- a/test/tax.test.js
++++ b/test/tax.test.js
+@@ -5,3 +5,7 @@ import { tax } from "../src/domain/tax.js";
+ test("returns the total for a known rate", () => {
+   assert.equal(tax(100, 0.2), 20);
+ });
++
++test("zero rate returns zero", () => {
++  assert.equal(tax(100, 0), 0);
++});

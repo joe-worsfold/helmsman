@@ -1,0 +1,12 @@
+diff --git a/src/parse.js b/src/parse.js
+index c4d9ae4..2d068e9 100644
+--- a/src/parse.js
++++ b/src/parse.js
+@@ -14,3 +14,7 @@ export function parseQuery(fields, query) {
+   }
+   return parsed;
+ }
++
++export function redact() {
++  return "[redacted]";
++}

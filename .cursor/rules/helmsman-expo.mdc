@@ -1,0 +1,15 @@
+---
+description: Expo and React Native. Loads for mobile app config and Maestro flows.
+globs:
+  - "**/.maestro/**"
+  - "**/maestro/**"
+  - "**/app.config.ts"
+  - "**/app.config.js"
+  - "**/eas.json"
+  - "**/apps/mobile/**"
+alwaysApply: false
+---
+
+# Expo
+
+One e2e smoke runner. For Maestro that command is `mobile:e2e` (or the headless script a person watches). It is not part of `pnpm check` or `make check`. Do not add a second Maestro job. `.helmsman/tools/expo/doctor.sh` runs only when `HELMSMAN_EXPO_DOCTOR=1`.

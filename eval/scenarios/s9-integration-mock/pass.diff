@@ -1,0 +1,19 @@
+diff --git a/test/invoice.int.test.js b/test/invoice.int.test.js
+new file mode 100644
+index 0000000..fafd895
+--- /dev/null
++++ b/test/invoice.int.test.js
+@@ -0,0 +1,13 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { consume } from "../src/worker.js";
++
++test("invoice job reaches the sink once", () => {
++  const seen = new Set();
++  const got = [];
++  consume({ id: "1", body: "ok", seen }, (body) => got.push(body));
++  assert.deepEqual(got, ["ok"]);
++  const again = consume({ id: "1", body: "ok", seen }, (body) => got.push(body));
++  assert.equal(again.duplicate, true);
++  assert.deepEqual(got, ["ok"]);
++});

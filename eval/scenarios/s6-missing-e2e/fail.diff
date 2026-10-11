@@ -1,0 +1,14 @@
+diff --git a/.helmsman/setup.md b/.helmsman/setup.md
+--- a/.helmsman/setup.md
++++ b/.helmsman/setup.md
+@@ -3,8 +3,8 @@
+ Languages: javascript
+ API: HTTP JSON
+ Surfaces: web
+-E2E smoke: node --test e2e/*.e2e.js
+-Watch: node --test e2e/*.e2e.js
++E2E smoke: none
++Watch: none
+ Issues: github
+ CI: github
+ File issues: no

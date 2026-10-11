@@ -1,0 +1,3 @@
+# Flaky eval scenarios stay here only with an issue URL.
+# One scenario id, then an http or https URL, per line.
+# Empty means nothing is quarantined.

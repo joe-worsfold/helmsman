@@ -1,0 +1,14 @@
+diff --git a/src/server.js b/src/server.js
+index 0c69d4f..31b2ded 100644
+--- a/src/server.js
++++ b/src/server.js
+@@ -5,5 +5,9 @@ export function handle(method, path, query) {
+     const parsed = parseQuery([], query);
+     return { status: 200, body: { ok: true, query: parsed } };
+   }
++  if (method === "GET" && path === "/banner") {
++    const parsed = parseQuery([{ name: "banner", kind: "id", required: true }], query);
++    return { status: 200, body: { banner: parsed.banner } };
++  }
+   return { status: 404, body: { error: "not_found" } };
+ }

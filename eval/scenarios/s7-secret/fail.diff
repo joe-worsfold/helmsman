@@ -1,0 +1,13 @@
+diff --git a/src/parse.js b/src/parse.js
+index c4d9ae4..25604c1 100644
+--- a/src/parse.js
++++ b/src/parse.js
+@@ -14,3 +14,8 @@ export function parseQuery(fields, query) {
+   }
+   return parsed;
+ }
++
++const token = "AKIAIOSFODNN7EXAMPLE";
++export function redact() {
++  return token;
++}
