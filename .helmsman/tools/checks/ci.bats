@@ -197,6 +197,20 @@ EOF
   [ -z "$bad" ]
 }
 
+@test "setup job installs only when Repo checks is set" {
+  printf '%s\n' "lockfileVersion: '9.0'" > pnpm-lock.yaml
+  write_setup bash
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  job="$(sed -n '/^  setup:/,/setup:check/p' .github/workflows/helmsman.yml)"
+  [[ -n "$job" && "$job" != *"pnpm install"* ]]
+  printf '%s\n' 'Repo checks: pnpm exec bats test' >> .helmsman/setup.md
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  job="$(sed -n '/^  setup:/,/setup:check/p' .github/workflows/helmsman.yml)"
+  [[ "$job" == *"pnpm install --frozen-lockfile"* ]]
+}
+
 @test "this repo workflow matches the emitter" {
   cd "$root"
   run "$checks/../ci/emit.sh" --check
