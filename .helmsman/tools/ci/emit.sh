@@ -159,20 +159,6 @@ checkout() {
   fi
 }
 
-node_setup() {
-  local cache_path="${1:-}"
-  emit "      - uses: pnpm/action-setup@v6"
-  emit "      - uses: actions/setup-node@v7"
-  emit "        with:"
-  emit "          node-version-file: .nvmrc"
-  if [[ -f pnpm-lock.yaml ]]; then
-    emit "          cache: pnpm"
-    if [[ -n "$cache_path" ]]; then
-      emit "          cache-dependency-path: ${cache_path}"
-    fi
-  fi
-}
-
 # A job that never installs restores no pnpm store, and pnpm skips its
 # install-before-run check. Its scripts use only bash, git, python3, and gh.
 bare_pnpm="pnpm --config.verify-deps-before-run=false"
@@ -181,6 +167,17 @@ bare_setup() {
   emit "      - uses: actions/setup-node@v7"
   emit "        with:"
   emit "          node-version-file: .nvmrc"
+}
+
+node_setup() {
+  local cache_path="${1:-}"
+  bare_setup
+  if [[ -f pnpm-lock.yaml ]]; then
+    emit "          cache: pnpm"
+    if [[ -n "$cache_path" ]]; then
+      emit "          cache-dependency-path: ${cache_path}"
+    fi
+  fi
 }
 
 install_root() {
