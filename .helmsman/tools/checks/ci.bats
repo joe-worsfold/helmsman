@@ -123,10 +123,24 @@ EOF
   [ "$status" -eq 1 ]
 }
 
-@test "integration and e2e smoke emit only when the setup line is set" {
+@test "local integration and e2e commands do not emit CI jobs" {
   write_setup rust "cargo test -- --ignored" "pnpm exec playwright test"
   printf '%s\n' '[package]' 'name = "demo"' 'version = "0.0.0"' > Cargo.toml
   git add Cargo.toml
+  git commit -q -m cargo
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  run grep -F 'name: test (integration)' .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
+  run grep -F 'name: e2e smoke' .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
+}
+
+@test "CI integration and CI e2e smoke yes emit those jobs" {
+  write_setup rust "cargo test -- --ignored" "pnpm exec playwright test"
+  printf '%s\n' 'CI integration: yes' 'CI e2e smoke: yes' >> .helmsman/setup.md
+  printf '%s\n' '[package]' 'name = "demo"' 'version = "0.0.0"' > Cargo.toml
+  git add -A
   git commit -q -m cargo
   run "$checks/../ci/emit.sh"
   [ "$status" -eq 0 ]
@@ -135,6 +149,42 @@ EOF
   grep -q 'name: e2e smoke' .github/workflows/helmsman.yml
   grep -q 'run: pnpm e2e:smoke' .github/workflows/helmsman.yml
   run grep -F 'playwright install' .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
+}
+
+@test "CI integration no stays off when the local command is set" {
+  write_setup rust "cargo test -- --ignored" "pnpm exec playwright test"
+  printf '%s\n' 'CI integration: no' 'CI e2e smoke: no' >> .helmsman/setup.md
+  git add -A
+  git commit -q -m keys
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  run grep -F 'name: test (integration)' .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
+  run grep -F 'name: e2e smoke' .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
+}
+
+@test "apps/web emits a prove job that does not take screenshots" {
+  write_setup bash
+  mkdir -p apps/web
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  grep -q 'name: prove (web)' .github/workflows/helmsman.yml
+  grep -q 'run: pnpm --config.verify-deps-before-run=false prove:web' .github/workflows/helmsman.yml
+  grep -q "needs.changes.outputs.web == 'true'" .github/workflows/helmsman.yml
+  grep -q '      - edited' .github/workflows/helmsman.yml
+  prove_if="$(awk '
+    $0 ~ "^  prove-web:$" { on=1; next }
+    on && /^  [^ ]/ { exit }
+    on { print }
+  ' .github/workflows/helmsman.yml)"
+  [[ "$prove_if" == *"action == 'edited'"* ]]
+  [[ "$prove_if" == *"github.event.changes.body"* ]]
+  [[ "$prove_if" == *"always()"* ]]
+  run grep -F "action != 'edited'" <<< "$prove_if"
+  [ "$status" -eq 1 ]
+  run grep -F 'playwright' .github/workflows/helmsman.yml
   [ "$status" -eq 1 ]
 }
 
@@ -263,7 +313,12 @@ EOF
   run "$checks/../ci/emit.sh"
   [ "$status" -eq 0 ]
   grep -q 'ready_for_review' .github/workflows/helmsman.yml
+  grep -q '      - edited' .github/workflows/helmsman.yml
+  grep -q "action == 'edited' && 'edited'" .github/workflows/helmsman.yml
   grep -q 'pull_request.draft == false' .github/workflows/helmsman.yml
+  grep -q "github.event.action != 'edited'" .github/workflows/helmsman.yml
+  run grep -F "action == 'edited' && github.event.changes.body" .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
   grep -q 'needs.changes.outputs.harness' .github/workflows/helmsman.yml
   grep -q 'needs.changes.outputs.audit' .github/workflows/helmsman.yml
   grep -q 'needs.changes.outputs.guard' .github/workflows/helmsman.yml

@@ -39,4 +39,4 @@ End with `Not checked:` one line.
 
 ## Sources
 
-ponytail@v5.1.0 (`9cc65d03aa2da1db7121b912d03596409ee340b8`) `skills/ponytail-review/SKILL.md` (concrete case; shortcut is a decision). cursor/plugins@`6e3d2ea56d7d446b955eaae6ac4c8eef8bf504cf` `cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md` (structural questions). MIT.
+ponytail@v5.1.0 (`9cc65d03aa2da1db7121b912d03596409ee340b8`) `skills/ponytail-review/SKILL.md` (concrete case; shortcut is a decision). cursor/plugins@`11713c683fe4add4fd403ea880580abbc9e0875f` `cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md` (structural questions). MIT.

@@ -1,6 +1,7 @@
 # Copy to the crate root only when rust-toolchain.toml is absent.
 # Channel is stable. The MSRV is rust-version = "1.85" in Cargo.toml,
-# not this channel. This file does not pass the Readiness pinned-toolchain check.
+# not this channel. Readiness accepts a root rust-toolchain.toml when a
+# Cargo.toml is in the tree. This copy is not that pin.
 [toolchain]
 channel = "stable"
 components = ["clippy", "rustfmt"]

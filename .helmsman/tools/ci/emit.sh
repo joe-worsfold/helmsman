@@ -29,12 +29,6 @@ field() {
   awk -F': ' -v key="$key" 'tolower($1) == key { sub(/^[^:]*: /, ""); print; exit }' .helmsman/setup.md
 }
 
-is_set() {
-  local value
-  value="$(lower "$1")"
-  [[ -n "$value" && "$value" != "none" ]]
-}
-
 ci="$(field "ci")"
 if [[ -n "$ci" && "$(lower "$ci")" != "github" ]]; then
   echo "helmsman: CI is ${ci}. Workflow not emitted."
@@ -110,12 +104,14 @@ if [[ "$ts_pkg" -eq 1 || "$vitest" -eq 1 ]]; then
   test_vitest=1
 fi
 
+# CI integration and CI e2e smoke default to no when the line is missing.
+# Integration and E2E smoke stay the local commands. They do not emit jobs.
 integration=0
 smoke=0
-if is_set "$(field "integration")"; then
+if [[ "$(lower "$(field "ci integration")")" == "yes" ]]; then
   integration=1
 fi
-if is_set "$(field "e2e smoke")"; then
+if [[ "$(lower "$(field "ci e2e smoke")")" == "yes" ]]; then
   smoke=1
 fi
 
@@ -231,10 +227,12 @@ begin_job() {
   emit "  ${id}:"
   emit "    name: ${name}"
   emit "    needs: changes"
-  if [[ "$gate" == "always" ]]; then
-    emit "    if: ${ready}"
+  if [[ "$id" == "prove-web" ]]; then
+    emit "    if: always() && ${ready} && ((github.event.action == 'edited' && github.event.changes.body) || (needs.changes.result == 'success' && (${gate})))"
+  elif [[ "$gate" == "always" ]]; then
+    emit "    if: ${ready} && github.event.action != 'edited'"
   else
-    emit "    if: ${ready} && (${gate})"
+    emit "    if: ${ready} && github.event.action != 'edited' && (${gate})"
   fi
   emit "    runs-on: ubuntu-latest"
   emit "    timeout-minutes: ${timeout}"
@@ -295,18 +293,19 @@ emit "      - opened"
 emit "      - ready_for_review"
 emit "      - synchronize"
 emit "      - reopened"
+emit "      - edited"
 emit "  push:"
 emit "    branches:"
 emit "      - main"
 emit ""
 emit "concurrency:"
-emit '  group: ${{ github.workflow }}-${{ github.ref }}'
+emit "  group: \${{ github.workflow }}-\${{ github.ref }}-\${{ github.event.action == 'edited' && 'edited' || 'run' }}"
 emit "  cancel-in-progress: true"
 emit ""
 emit "jobs:"
 emit "  changes:"
 emit "    name: changes"
-emit "    if: ${ready}"
+emit "    if: ${ready} && github.event.action != 'edited'"
 emit "    runs-on: ubuntu-latest"
 emit "    timeout-minutes: 5"
 emit "    outputs:"
@@ -387,6 +386,16 @@ fi
 if [[ "$smoke" -eq 1 ]]; then
   pnpm_job e2e-smoke "e2e smoke" "needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'" 20 e2e:smoke "" no node
 fi
+if [[ -d apps/web ]]; then
+  begin_job prove-web "prove (web)" "needs.changes.outputs.web == 'true'" 5
+  checkout full
+  node_setup
+  emit "      - name: prove:web"
+  emit "        env:"
+  emit '          HELMSMAN_DIFF_RANGE: "${{ github.event_name == '"'"'pull_request'"'"' && format('"'"'{0}...HEAD'"'"', github.event.pull_request.base.sha) || '"'"'HEAD~1...HEAD'"'"' }}"'
+  emit "        run: pnpm --config.verify-deps-before-run=false prove:web"
+  emit ""
+fi
 if [[ "$harness_test" -eq 1 ]]; then
   pnpm_job test-harness "test (harness)" "needs.changes.outputs.harness == 'true'" 20 test harness no node
 fi
@@ -452,7 +461,7 @@ emit ""
 
 emit "  ci-ok:"
 emit "    name: ci-ok"
-emit "    if: always() && ${ready}"
+emit "    if: always() && ${ready} && github.event.action != 'edited'"
 emit "    needs:"
 for id in "${job_ids[@]}"; do
   emit "      - ${id}"

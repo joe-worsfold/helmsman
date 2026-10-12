@@ -8,18 +8,19 @@ on:
       - ready_for_review
       - synchronize
       - reopened
+      - edited
   push:
     branches:
       - main
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'edited' && 'edited' || 'run' }}
   cancel-in-progress: true
 
 jobs:
   changes:
     name: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -54,7 +55,7 @@ jobs:
   typecheck-tsc:
     name: typecheck (tsc)
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.ts == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.ts == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -72,7 +73,7 @@ jobs:
   test-harness:
     name: test (harness)
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.harness == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.harness == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -92,7 +93,7 @@ jobs:
   audit:
     name: audit
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.audit == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.audit == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -110,7 +111,7 @@ jobs:
   setup:
     name: setup
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.setup == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.setup == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -128,7 +129,7 @@ jobs:
   diff-guard:
     name: diff guard
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.guard == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.guard == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -152,7 +153,7 @@ jobs:
   eslint-package:
     name: eslint-package
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.eslint == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.eslint == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -172,7 +173,7 @@ jobs:
   knip-package:
     name: knip-package
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.knip == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.knip == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -192,7 +193,7 @@ jobs:
   lint-actionlint:
     name: lint (actionlint)
     needs: changes
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.changes.outputs.workflows == 'true')
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited' && (needs.changes.outputs.workflows == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -210,7 +211,7 @@ jobs:
 
   ci-ok:
     name: ci-ok
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && github.event.action != 'edited'
     needs:
       - changes
       - typecheck-tsc

@@ -460,6 +460,22 @@ if setup.is_file():
         extra += "Nightly max tokens: 200000\n"
     if "nightly max minutes:" not in lowered:
         extra += "Nightly max minutes: 30\n"
+    def setup_value(key):
+        prefix = key.lower() + ":"
+        for line in text.splitlines():
+            if line.lower().startswith(prefix):
+                return line.split(":", 1)[1].strip().lower()
+        return ""
+
+    def ci_flag(local):
+        if local and local != "none":
+            return "yes"
+        return "no"
+
+    if "ci integration:" not in lowered:
+        extra += f"CI integration: {ci_flag(setup_value('Integration'))}\n"
+    if "ci e2e smoke:" not in lowered:
+        extra += f"CI e2e smoke: {ci_flag(setup_value('E2E smoke'))}\n"
     if extra:
         if not text.endswith("\n"):
             text += "\n"

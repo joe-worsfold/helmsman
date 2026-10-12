@@ -16,15 +16,21 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 **Owners:** pass. `.github/CODEOWNERS` names an owner. Adapter: native.
 **Branch protection:** unknown. Required reviewers and required status checks are not in this clone. This line does not change Owners.
 
-`pnpm typecheck` fails the pull request when `eval/failure-text.mjs` or `eval/quarantine.mjs` does not typecheck. The `typecheck (tsc)` job runs that script after `pnpm install --frozen-lockfile`. Level 2 is 5 of 6, so that level still holds. Level 5 is 2 of 4: repeated trials and rules tested. The next gate is a sandbox that denies agent shell and network unless allowed.
+`pnpm typecheck` fails the pull request when `eval/failure-text.mjs` or `eval/quarantine.mjs` does not typecheck. The `typecheck (tsc)` job runs that script after `pnpm install --frozen-lockfile`. `eval/tsconfig.json` has `"strict": true`. This repo has no app build, so build evidence is n/a. Format is n/a: there is no Prettier, rustfmt, or Ruff formatter. Lint still fails the pull request through `bash-n.sh` and `no-silences.sh`. Level 2 is 8 of 8, so that level still holds. Level 5 is 2 of 4: repeated trials and rules tested. The next gate is a sandbox that denies agent shell and network unless allowed.
+
+**Observed:** Pure unit `ran: pass` (`pnpm check`, including the harness suite). Setup and Local setup `ran: pass` for the commands this repo can run. `pnpm install --frozen-lockfile` is `ran: env-blocked` in this agent environment: `lefthook install` exits because `core.hooksPath` is already set. The packages were installed before that script failed. That block is the tool environment.
+
+**Licence:** present. MIT. This repository is public, so an absent licence would be flagged. The line is not scored.
+
+**Agent compatibility (cross-check):** 81/100 deterministic, Agent-Ready. Presence fails: healthOrDebugSignal, metricsTracingOrErrorReporting, secretHygiene. Unscored. `secretHygiene` fails because this repo has no product env reads and no `.env.example`. An empty env example and a secrets-scanner note were not added. This repo has no service and no product env, so those files would only move the unscored presence number. The presence score stays separate from the readiness score.
 
 | Level | Check | Capability | Adapter | Evidence |
 | ----- | ----- | ---------- | ------- | -------- |
 | 1 | End-to-end, local | pass | helmsman | `.helmsman/setup.md` Surfaces none. No app. |
 | 1 | End-to-end, pre-merge smoke | pass | helmsman | `E2E smoke` is `none`. No smoke job. No app. Gates level 1. |
 | 1 | Setup | pass | native | `README.md` names install-by-copy, `pnpm install --frozen-lockfile`, and `./eval/run.sh`. |
-| 1 | Lint | pass | helmsman | `pnpm setup:check` runs `bash-n.sh` and `no-silences.sh` on the hook and in the setup job. |
-| 1 | Types | pass | helmsman | `pnpm typecheck` runs `tsc --noEmit -p eval/tsconfig.json`. The `typecheck (tsc)` job installs dependencies, then runs that script. |
+| 1 | Lint and format | pass | helmsman | `pnpm setup:check` runs `bash-n.sh` and `no-silences.sh` on the hook and in the setup job. Format is n/a. |
+| 1 | Types | pass | helmsman | `pnpm typecheck` runs `tsc --noEmit -p eval/tsconfig.json`. `"strict": true`. Build is n/a. The `typecheck (tsc)` job installs dependencies, then runs that script. |
 | 1 | Integration | n/a | helmsman | No database, queue, or emulator. `Integration: none`, so no integration job. |
 | 1 | Pure unit | pass | helmsman | `test (harness)` runs `pnpm test` with `HELMSMAN_FILTER=harness`. In CI that is flake and three trials. It does not clear the rows above. |
 | 1 | Lockfile | pass | helmsman | `pnpm install --frozen-lockfile` on the root lock in typecheck, test, and audit. `pnpm-lock.sh` runs in the setup job. The ESLint and Knip jobs use their own frozen install when they run. |
@@ -33,10 +39,12 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 | 2 | Pull-request template | pass | native | `.github/PULL_REQUEST_TEMPLATE.md` |
 | 2 | Owners | pass | native | `.github/CODEOWNERS` names an owner. |
 | 2 | Local setup | pass | native | `README.md` |
-| 2 | Pinned toolchain | fail | absent | No environment image. `.nvmrc` pins the Node version. |
+| 2 | Docs match the tree | pass | helmsman | `docs-commands.sh` runs inside `pnpm setup:check`. |
+| 2 | Scoped local check | pass | helmsman | `lefthook.yml` globs, and `HELMSMAN_AFFECTED=1` in `pnpm-task.sh`. |
+| 2 | Pinned toolchain | pass | native | `.nvmrc` is `26.11.1`. No `Cargo.toml`, so a root `rust-toolchain.toml` is not required. |
 | 3 | Secrets and dependencies | pass | helmsman | The secret scan runs in `pnpm setup:check` and in `pnpm audit:all`. The audit job runs `pnpm audit --audit-level=high` on the root lock and on `.helmsman/tools/eslint` and `.helmsman/tools/knip`. gitleaks is not installed here; the built-in patterns still fail the commit. |
 | 3 | Policy scan | n/a | absent | No application SAST target. Infrastructure is SST; there is no Terraform or Checkov adapter. |
-| 3 | Boundaries | pass | helmsman | `.helmsman/tools/eslint/check.mjs` rejects `import "scripts/..."`. The `eslint-package` job runs that file when `.helmsman/tools/eslint` changes. |
+| 3 | Boundaries | pass | helmsman | `.helmsman/tools/eslint/check.mjs` rejects `import "scripts/..."`. The generated hand-edit gate rejects a lockfile or `generated/` edit. The `eslint-package` job runs that file when `.helmsman/tools/eslint` changes. |
 | 3 | Suppression guard | pass | helmsman | `.helmsman/tools/checks/diff-guard.sh` in lefthook and the workflow. |
 | 3 | Telemetry | n/a | absent | No running app. |
 | 4 | Post-deploy / full end-to-end | fail | absent | No deploy workflow, no nightly exhaustive suite, and no application. |

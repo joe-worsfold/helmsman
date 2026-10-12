@@ -16,6 +16,10 @@ What this covers, and what it leaves out.
 
 Who or what this touches, and why that is safe or risky.
 
+## How to verify locally
+
+Follow [helmsman-prove](../.cursor/skills/helmsman-prove/SKILL.md). For a UI change, list the screenshot paths under `.helmsman/reports/prove/`. For a backend change, name the command and the exit code.
+
 ## How it was checked
 
 - Command that ran, and what it showed.

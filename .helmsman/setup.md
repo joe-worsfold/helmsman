@@ -6,9 +6,11 @@ Surfaces: none
 E2E smoke: none
 Watch: none
 Integration: none
+CI integration: no
+CI e2e smoke: no
 Issues: github
 CI: github
-File issues: no
+File issues: yes
 Fix: no
 Upstream PR: no
 Correct PR: no

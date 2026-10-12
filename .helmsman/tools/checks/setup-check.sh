@@ -59,6 +59,23 @@ if [[ "$(lower "$fix")" != "yes" && "$(lower "$fix")" != "no" ]]; then
   exit 1
 fi
 
+ci_integration="$(field "ci integration")"
+ci_smoke="$(field "ci e2e smoke")"
+if [[ -n "$ci_integration" && "$(lower "$ci_integration")" != "yes" && "$(lower "$ci_integration")" != "no" ]]; then
+  echo "helmsman: CI integration must be yes or no." >&2
+  exit 1
+fi
+if [[ -n "$ci_smoke" && "$(lower "$ci_smoke")" != "yes" && "$(lower "$ci_smoke")" != "no" ]]; then
+  echo "helmsman: CI e2e smoke must be yes or no." >&2
+  exit 1
+fi
+
+here="$(cd "$(dirname "$0")" && pwd)"
+"$here/docs-commands.sh"
+"$here/env-example.sh"
+"$here/agents-words.sh"
+"$here/../tsc/check.sh" --strict
+
 if [[ "$(lower "$surfaces")" == "none" ]]; then
   if [[ "$(lower "$smoke")" != "none" || "$(lower "$watch")" != "none" ]]; then
     echo "helmsman: Surfaces is none, so E2E smoke and Watch must be none." >&2

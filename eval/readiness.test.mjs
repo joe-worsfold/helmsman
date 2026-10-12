@@ -18,6 +18,7 @@ import {
   filesInBad,
   gateRow,
   level1,
+  levelGroup,
   ownersReport,
   slopDensity,
 } from "./readiness.mjs";
@@ -185,6 +186,38 @@ test("no application passes local and pre-merge end-to-end", () => {
     lockfile: "pass",
   });
   assert.equal(score.earned, true);
+});
+
+test("docs drift drops level 2 until the documented commands match", () => {
+  const drifted = levelGroup([
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "fail",
+    "pass",
+    "fail",
+  ]);
+  assert.equal(drifted.count, 8);
+  assert.equal(drifted.need, 7);
+  assert.equal(drifted.passes, 6);
+  assert.equal(drifted.earned, false);
+
+  const fixed = levelGroup([
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "pass",
+    "fail",
+  ]);
+  assert.equal(fixed.count, 8);
+  assert.equal(fixed.need, 7);
+  assert.equal(fixed.passes, 7);
+  assert.equal(fixed.earned, true);
 });
 
 test("slop uses baseline for a first measure and delta after it on a feature branch", () => {

@@ -66,6 +66,25 @@ function passed(capability) {
 }
 
 /**
+ * One level's 80% group. Unknown counts as a fail. Not applicable leaves the row out.
+ * A level with nothing left to count is earned.
+ *
+ * @param {Capability[]} rows
+ */
+export function levelGroup(rows) {
+  const counted = rows.filter((row) => counts(row));
+  const passes = counted.filter((row) => passed(row)).length;
+  const need = Math.ceil(0.8 * counted.length);
+  return {
+    earned: passes >= need,
+    passes,
+    count: counted.length,
+    need,
+    fraction: fractionOf(passes, counted.length),
+  };
+}
+
+/**
  * Level 1. The pre-merge smoke is required and sits outside the 80% count.
  * Local end-to-end is inside that count. Post-deploy / full is not a level 1 row.
  * Unknown counts as a fail. Not applicable leaves the row out.

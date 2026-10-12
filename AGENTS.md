@@ -20,3 +20,7 @@ Agents work in draft. Prove the change locally with `pnpm check` and the pre-com
 | Lint, format, types, unused code, and tests | `pnpm check` |
 
 `helmsman-correct` keeps this table current. A rule with nothing in the second column is not enforced.
+
+## Getting CI green
+
+Use `gh pr checks` to see the failing job. Do not start from `gh run list`. Fix one failure, then look again. Retry a flake once and report that retry. When the failure is already fixed on the default branch and this change did not cause it, merge that branch in. A draft does not run CI, so the draft loop is `pnpm check` and the pre-commit hook.

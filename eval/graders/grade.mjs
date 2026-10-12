@@ -337,6 +337,36 @@ function silentSkip(ctx) {
   return null;
 }
 
+function shellGrade(ctx, script, label) {
+  try {
+    execFileSync(join(ctx.root, script), [ctx.work], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    return null;
+  } catch (err) {
+    if (exitStatus(err) === 1) return label;
+    const stderr = failureText(err);
+    throw new Error(stderr || `${label} could not run`);
+  }
+}
+
+function docsDrift(ctx) {
+  return shellGrade(
+    ctx,
+    ".helmsman/tools/checks/docs-commands.sh",
+    "documented commands do not match the tree",
+  );
+}
+
+function envMissing(ctx) {
+  return shellGrade(
+    ctx,
+    ".helmsman/tools/checks/env-example.sh",
+    "product env reads are missing from .env.example",
+  );
+}
+
 function hollowTest(ctx) {
   const stub = /mock\.method|jest\.mock|vi\.mock|sinon\.(?:stub|mock)|mock\.module/;
   const loose =
@@ -398,6 +428,8 @@ const checks = {
   devex_break: devexBreak,
   feature_leak: featureLeak,
   hollow_test: hollowTest,
+  docs_drift: docsDrift,
+  env_missing: envMissing,
 };
 
 export function grade(ctx) {

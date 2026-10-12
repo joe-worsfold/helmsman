@@ -156,7 +156,7 @@ A Python package script block:
 
 The harness is not a workspace package. `pnpm-workspace.yaml` globs and Turborepo's package discovery do not match a dot-directory. The root scripts call `.helmsman/tools/checks/pnpm-task.sh`. Pre-commit calls those same scripts. A consumer `package.json` that still names `tools/helmsman` is rewritten by the migration below.
 
-Do not copy a workflow by hand. When CI is `github`, `.helmsman/tools/ci/emit.sh` writes `.github/workflows/helmsman.yml` for the languages and features this repo has. A later edit to the workflow is drift: `emit.sh --check` fails until you run the emitter again. The workflow triggers on pull request `opened`, `ready_for_review`, `synchronize`, and `reopened`, and on push to `main`. Every job is skipped while the pull request is a draft. Wall clock for a pull request stays under 5 minutes: jobs run in parallel after `changes`, and a job starts only when its path output is true.
+Do not copy a workflow by hand. When CI is `github`, `.helmsman/tools/ci/emit.sh` writes `.github/workflows/helmsman.yml` for the languages and features this repo has. A later edit to the workflow is drift: `emit.sh --check` fails until you run the emitter again. The workflow triggers on pull request `opened`, `ready_for_review`, `synchronize`, `reopened`, and `edited`, and on push to `main`. Every job is skipped while the pull request is a draft. `edited` skips every job except `prove (web)`, and that job runs only when the body changed and `apps/web` exists. Wall clock for a pull request stays under 5 minutes: jobs run in parallel after `changes`, and a job starts only when its path output is true.
 
 `pnpm lint:actions` runs [actionlint](https://github.com/rhysd/actionlint) v1.7.12. `.helmsman/tools/checks/actionlint.sh` installs it with the official download script pinned to commit `914e7df21a07ef503a81201c76d2b11c789d3fca`. The first local run, and the setup step below, download the binary into the user cache. The CI job calls the same script and passes that pin. Lefthook runs it only when `.github/workflows/**` or `.github/actions/**` is staged.
 
@@ -197,6 +197,8 @@ Surfaces: none
 E2E smoke: none
 Watch: none
 Integration: none
+CI integration: no
+CI e2e smoke: no
 Issues: <issues>
 CI: <ci>
 File issues: <yes|no>
@@ -207,6 +209,8 @@ Review model: none
 ```
 
 `Surfaces` stays `none` until an app exists. The change that adds `apps/web` sets `Surfaces`, `E2E smoke`, and `Watch` to its Playwright commands. The change that adds `apps/mobile` does the same for Maestro. The change that adds the first SurrealDB schema sets `Integration`.
+
+`CI integration` and `CI e2e smoke` only control whether the workflow emits those jobs. A missing line means no. `Integration` and `E2E smoke` stay the local commands. Re-setup writes each key as `yes` when that local command is not `none`, and `no` when it is `none`, so a repo that already emits the job keeps it. When you set `E2E smoke` or `Integration` to a command that should fail the pull request, set the matching CI key to `yes`.
 
 ## Review before ready
 
