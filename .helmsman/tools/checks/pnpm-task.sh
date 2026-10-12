@@ -60,7 +60,7 @@ case "$cmd" in
     if want ts; then "$here/task.sh" ts lint; fi
     if want rust; then "$here/task.sh" rust lint; fi
     if want python; then "$here/task.sh" python lint; fi
-    if want bash || [[ -z "$filter" ]]; then
+    if want bash; then
       "$here/bash-n.sh"
       "$here/no-silences.sh"
     fi
