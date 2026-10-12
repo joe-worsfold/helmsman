@@ -80,7 +80,7 @@ while IFS= read -r file; do
       ;;
   esac
   case "$file" in
-    .helmsman/tools/* | eval/*)
+    .helmsman/tools/* | eval/* | .cursor/rules/* | .cursor/skills/* | .cursor/automations/*)
       harness=true
       ;;
   esac
