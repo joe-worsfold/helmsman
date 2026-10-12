@@ -159,12 +159,19 @@ checkout() {
   fi
 }
 
-node_setup() {
-  local cache_path="${1:-}"
+# A job that never installs restores no pnpm store, and pnpm skips its
+# install-before-run check. Its scripts use only bash, git, python3, and gh.
+bare_pnpm="pnpm --config.verify-deps-before-run=false"
+bare_setup() {
   emit "      - uses: pnpm/action-setup@v6"
   emit "      - uses: actions/setup-node@v7"
   emit "        with:"
   emit "          node-version-file: .nvmrc"
+}
+
+node_setup() {
+  local cache_path="${1:-}"
+  bare_setup
   if [[ -f pnpm-lock.yaml ]]; then
     emit "          cache: pnpm"
     if [[ -n "$cache_path" ]]; then
@@ -205,6 +212,7 @@ run_pnpm() {
   local script="$1"
   local filter="${2:-}"
   local scm="${3:-}"
+  local runner="${4:-pnpm}"
   emit "      - name: ${script}"
   if [[ -n "$filter" || "$scm" == "yes" ]]; then
     emit "        env:"
@@ -215,7 +223,7 @@ run_pnpm() {
       emit "          HELMSMAN_FILTER: ${filter}"
     fi
   fi
-  emit "        run: pnpm ${script}"
+  emit "        run: ${runner} ${script}"
 }
 
 begin_job() {
@@ -248,6 +256,7 @@ pnpm_job() {
   local filter="${6:-}"
   local scm="${7:-}"
   local kind="${8:-node}"
+  local runner=pnpm
   begin_job "$id" "$name" "$gate" "$timeout"
   if [[ "$scm" == "yes" || "$id" == "diff-guard" || "$id" == "setup" ]]; then
     checkout full
@@ -274,10 +283,11 @@ pnpm_job() {
       fi
       ;;
     bare)
-      node_setup
+      bare_setup
+      runner="$bare_pnpm"
       ;;
   esac
-  run_pnpm "$script" "$filter" "$scm"
+  run_pnpm "$script" "$filter" "$scm" "$runner"
   emit ""
 }
 
@@ -325,11 +335,11 @@ emit '      audit: ${{ steps.paths.outputs.audit }}'
 emit '      guard: ${{ steps.paths.outputs.guard }}'
 emit "    steps:"
 checkout full
-node_setup
+bare_setup
 emit "      - id: paths"
 emit "        env:"
 emit '          HELMSMAN_CI_BASE: ${{ github.event_name == '"'"'pull_request'"'"' && github.event.pull_request.base.sha || github.event.before }}'
-emit "        run: pnpm ci:paths"
+emit "        run: ${bare_pnpm} ci:paths"
 emit ""
 job_ids+=(changes)
 
@@ -389,11 +399,11 @@ fi
 if [[ -d apps/web ]]; then
   begin_job prove-web "prove (web)" "needs.changes.outputs.web == 'true'" 5
   checkout full
-  node_setup
+  bare_setup
   emit "      - name: prove:web"
   emit "        env:"
   emit '          HELMSMAN_DIFF_RANGE: "${{ github.event_name == '"'"'pull_request'"'"' && format('"'"'{0}...HEAD'"'"', github.event.pull_request.base.sha) || '"'"'HEAD~1...HEAD'"'"' }}"'
-  emit "        run: pnpm --config.verify-deps-before-run=false prove:web"
+  emit "        run: ${bare_pnpm} prove:web"
   emit ""
 fi
 if [[ "$harness_test" -eq 1 ]]; then
@@ -423,15 +433,15 @@ pnpm_job setup setup "needs.changes.outputs.setup == 'true'" 10 setup:check "" n
 
 begin_job diff-guard "diff guard" "needs.changes.outputs.guard == 'true'" 10
 checkout full
-node_setup
+bare_setup
 emit "      - name: diff:guard"
 emit "        env:"
 emit '          HELMSMAN_DIFF_RANGE: "${{ github.event_name == '"'"'pull_request'"'"' && format('"'"'{0}...HEAD'"'"', github.event.pull_request.base.sha) || '"'"'HEAD~1...HEAD'"'"' }}"'
-emit "        run: pnpm diff:guard"
+emit "        run: ${bare_pnpm} diff:guard"
 emit "      - name: plain:language"
 emit "        env:"
 emit '          HELMSMAN_DIFF_RANGE: "${{ github.event_name == '"'"'pull_request'"'"' && format('"'"'{0}...HEAD'"'"', github.event.pull_request.base.sha) || '"'"'HEAD~1...HEAD'"'"' }}"'
-emit "        run: pnpm plain:language"
+emit "        run: ${bare_pnpm} plain:language"
 emit ""
 
 if [[ "$eslint_pkg" -eq 1 ]]; then
@@ -457,12 +467,12 @@ fi
 
 begin_job lint-actionlint "lint (actionlint)" "needs.changes.outputs.workflows == 'true'" 10
 checkout
-node_setup
+bare_setup
 emit "      - name: lint:actions"
 emit "        env:"
 emit "          ACTIONLINT_SHA: ${actionlint_sha}"
 emit "          ACTIONLINT_VERSION: \"${actionlint_version}\""
-emit "        run: pnpm lint:actions"
+emit "        run: ${bare_pnpm} lint:actions"
 emit ""
 
 emit "  ci-ok:"
@@ -480,18 +490,18 @@ emit "      issues: read"
 emit "      pull-requests: read"
 emit "    steps:"
 checkout full
-node_setup
+bare_setup
 emit "      - name: ci:ok"
 emit "        env:"
 emit "          HELMSMAN_CI_RESULTS: >-"
 for id in "${job_ids[@]}"; do
   printf '            %s=${{ needs.%s.result }}\n' "$id" "$id" >> "$out"
 done
-emit "        run: pnpm ci:ok"
+emit "        run: ${bare_pnpm} ci:ok"
 emit "      - name: review:current"
 emit "        env:"
 emit "          GH_TOKEN: \${{ github.token }}"
-emit "        run: pnpm review:current"
+emit "        run: ${bare_pnpm} review:current"
 
 dest=".github/workflows/helmsman.yml"
 if [[ "$mode" == "stdout" ]]; then

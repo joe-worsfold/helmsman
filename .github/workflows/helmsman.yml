@@ -46,11 +46,10 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - id: paths
         env:
           HELMSMAN_CI_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-        run: pnpm ci:paths
+        run: pnpm --config.verify-deps-before-run=false ci:paths
 
   typecheck-tsc:
     name: typecheck (tsc)
@@ -122,9 +121,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - name: setup:check
-        run: pnpm setup:check
+        run: pnpm --config.verify-deps-before-run=false setup:check
 
   diff-guard:
     name: diff guard
@@ -140,15 +138,14 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - name: diff:guard
         env:
           HELMSMAN_DIFF_RANGE: "${{ github.event_name == 'pull_request' && format('{0}...HEAD', github.event.pull_request.base.sha) || 'HEAD~1...HEAD' }}"
-        run: pnpm diff:guard
+        run: pnpm --config.verify-deps-before-run=false diff:guard
       - name: plain:language
         env:
           HELMSMAN_DIFF_RANGE: "${{ github.event_name == 'pull_request' && format('{0}...HEAD', github.event.pull_request.base.sha) || 'HEAD~1...HEAD' }}"
-        run: pnpm plain:language
+        run: pnpm --config.verify-deps-before-run=false plain:language
 
   eslint-package:
     name: eslint-package
@@ -202,12 +199,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - name: lint:actions
         env:
           ACTIONLINT_SHA: 914e7df21a07ef503a81201c76d2b11c789d3fca
           ACTIONLINT_VERSION: "1.7.12"
-        run: pnpm lint:actions
+        run: pnpm --config.verify-deps-before-run=false lint:actions
 
   ci-ok:
     name: ci-ok
@@ -236,7 +232,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: pnpm
       - name: ci:ok
         env:
           HELMSMAN_CI_RESULTS: >-
@@ -249,8 +244,8 @@ jobs:
             eslint-package=${{ needs.eslint-package.result }}
             knip-package=${{ needs.knip-package.result }}
             lint-actionlint=${{ needs.lint-actionlint.result }}
-        run: pnpm ci:ok
+        run: pnpm --config.verify-deps-before-run=false ci:ok
       - name: review:current
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm review:current
+        run: pnpm --config.verify-deps-before-run=false review:current

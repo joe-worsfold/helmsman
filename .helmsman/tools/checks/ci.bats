@@ -211,6 +211,25 @@ EOF
   [[ "$job" == *"pnpm install --frozen-lockfile"* ]]
 }
 
+@test "jobs that never install skip the pnpm store and the pre-run install" {
+  printf '%s\n' "lockfileVersion: '9.0'" > pnpm-lock.yaml
+  write_setup bash
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  wf=.github/workflows/helmsman.yml
+  for id in changes setup diff-guard lint-actionlint ci-ok; do
+    job="$(awk -v id="  ${id}:" '$0 == id { on=1; next } on && /^  [^ ]/ { exit } on { print }' "$wf")"
+    [[ -n "$job" ]]
+    [[ "$job" != *"cache: pnpm"* ]]
+    [[ "$job" != *"pnpm install"* ]]
+    bad="$(grep -E '^[[:space:]]*run:' <<< "$job" | grep -v -F 'run: pnpm --config.verify-deps-before-run=false ' || true)"
+    [ -z "$bad" ]
+  done
+  job="$(awk '$0 == "  audit:" { on=1; next } on && /^  [^ ]/ { exit } on { print }' "$wf")"
+  [[ "$job" == *"cache: pnpm"* ]]
+  [[ "$job" == *"run: pnpm audit:all"* ]]
+}
+
 @test "this repo workflow matches the emitter" {
   cd "$root"
   run "$checks/../ci/emit.sh" --check
