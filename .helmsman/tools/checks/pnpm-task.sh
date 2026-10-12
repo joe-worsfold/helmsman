@@ -83,6 +83,7 @@ case "$cmd" in
     "$here/task.sh" ts unused
     ;;
   test)
+    "$here/repo-checks.sh"
     if want ts; then "$here/task.sh" ts test; fi
     if want rust; then "$here/task.sh" rust test; fi
     if want python; then "$here/task.sh" python test; fi
@@ -106,6 +107,7 @@ case "$cmd" in
     ;;
   setup)
     "$here/task.sh" setup
+    "$here/repo-checks.sh"
     ;;
   diff-guard)
     "$here/task.sh" diff-guard

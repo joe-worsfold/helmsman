@@ -204,6 +204,20 @@ printf '%s\n' '# Setup' 'Integration: echo integration' > "$tmp/.helmsman/setup.
 track
 expect_exit 0 "$root/.helmsman/tools/surreal/check.sh" >/dev/null
 
+echo "repo checks: no line skips"
+new_repo
+mkdir -p "$tmp/.helmsman"
+printf '%s\n' '# Setup' 'Integration: none' > "$tmp/.helmsman/setup.md"
+out="$(expect_exit 0 "$root/.helmsman/tools/checks/repo-checks.sh")"
+printf '%s\n' "$out" | grep -q "no repo checks"
+
+echo "repo checks: a failing command fails"
+new_repo
+mkdir -p "$tmp/.helmsman"
+printf '%s\n' '# Setup' 'Repo checks: echo ran && exit 3' > "$tmp/.helmsman/setup.md"
+out="$(expect_exit 3 "$root/.helmsman/tools/checks/repo-checks.sh")"
+printf '%s\n' "$out" | grep -q "^ran$"
+
 echo "postgres: sql without a config skips"
 new_repo
 mkdir -p "$tmp/migrations"

@@ -413,7 +413,13 @@ fi
 run_pnpm audit:all
 emit ""
 
-pnpm_job setup setup "needs.changes.outputs.setup == 'true'" 10 setup:check "" no bare
+# Repo checks may call a root dev dependency, so the setup job installs then.
+setup_kind=bare
+repo_checks="$(lower "$(field "repo checks")")"
+if [[ -n "$repo_checks" && "$repo_checks" != "none" ]]; then
+  setup_kind=node
+fi
+pnpm_job setup setup "needs.changes.outputs.setup == 'true'" 10 setup:check "" no "$setup_kind"
 
 begin_job diff-guard "diff guard" "needs.changes.outputs.guard == 'true'" 10
 checkout full

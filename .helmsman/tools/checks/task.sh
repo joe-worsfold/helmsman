@@ -39,12 +39,12 @@ run_turbo() {
     echo "helmsman: turbo.json exists but pnpm is not installed." >&2
     return 1
   fi
-  local affected=()
+  # macOS /bin/bash is 3.2, where an empty array under set -u is unbound.
   if [[ "${GITHUB_ACTIONS:-}" == "true" || "${HELMSMAN_AFFECTED:-}" == "1" ]]; then
-    affected+=(--affected)
+    set -- --affected "$@"
   fi
-  echo "helmsman: turbo run ${task} ${affected[*]} $*"
-  pnpm exec turbo run "$task" --output-logs=errors-only "${affected[@]}" "$@"
+  echo "helmsman: turbo run ${task} $*"
+  TURBO_TELEMETRY_DISABLED=1 pnpm exec turbo run "$task" --output-logs=errors-only "$@"
 }
 
 root_eslint() {
@@ -182,7 +182,7 @@ rust_lint() {
     "$root/.helmsman/tools/clippy/floor.sh"
   fi
   package_filters "packages/*/rs" "apps/api" "apps/mcp"
-  run_turbo lint "${filters[@]}"
+  run_turbo lint ${filters[@]+"${filters[@]}"}
   if [[ -f "$root/.helmsman/tools/clippy/check-file-length.sh" ]]; then
     "$root/.helmsman/tools/clippy/check-file-length.sh"
   fi
@@ -193,7 +193,7 @@ rust_format() {
     return 0
   fi
   package_filters "packages/*/rs" "apps/api" "apps/mcp"
-  run_turbo format "${filters[@]}"
+  run_turbo format ${filters[@]+"${filters[@]}"}
 }
 
 rust_test() {
@@ -201,7 +201,7 @@ rust_test() {
     return 0
   fi
   package_filters "packages/*/rs" "apps/api" "apps/mcp"
-  run_turbo test "${filters[@]}"
+  run_turbo test ${filters[@]+"${filters[@]}"}
 }
 
 python_task() {
