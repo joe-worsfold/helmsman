@@ -364,6 +364,23 @@ EOF
   awk '/name: audit$/,/timeout-minutes/' .github/workflows/helmsman.yml | grep -q 'outputs.audit'
 }
 
+@test "ci paths run setup when a Cursor rule or the Claude copy changes" {
+  mkdir -p .cursor/rules .claude/rules
+  printf '%s\n' '# docs' > README.md
+  git add -A
+  git commit -q -m base
+
+  for file in .cursor/rules/helmsman-rust.mdc .claude/rules/helmsman-rust.md CLAUDE.md AGENTS.md; do
+    base="$(git rev-parse HEAD)"
+    printf '%s\n' "# $file" > "$file"
+    git add -A
+    git commit -q -m "$file"
+    run env HELMSMAN_CI_BASE="$base" "$checks/ci-paths.sh"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"setup=true"* ]]
+  done
+}
+
 @test "ci paths skip a docs-only diff and keep a harness diff" {
   mkdir -p eval .github/workflows .helmsman/tools/checks
   printf '%s\n' '# docs' > README.md

@@ -104,7 +104,7 @@ while IFS= read -r file; do
     *) guard=true ;;
   esac
   case "$file" in
-    .helmsman/* | .github/* | lefthook.yml | turbo.json | pnpm-workspace.yaml | package.json | pnpm-lock.yaml | .nvmrc | .python-version | rust-toolchain.toml | *.sh | *.bash | *.rs | *.py | *.js | *.jsx | *.ts | *.tsx | *.mjs | *.cjs | *.mts | *.cts | *.surql | *.sql | *.toml | *.yml | *.yaml | *.json)
+    .helmsman/* | .github/* | .cursor/* | .claude/* | CLAUDE.md | AGENTS.md | lefthook.yml | turbo.json | pnpm-workspace.yaml | package.json | pnpm-lock.yaml | .nvmrc | .python-version | rust-toolchain.toml | *.sh | *.bash | *.rs | *.py | *.js | *.jsx | *.ts | *.tsx | *.mjs | *.cjs | *.mts | *.cts | *.surql | *.sql | *.toml | *.yml | *.yaml | *.json)
       setup=true
       ;;
   esac
