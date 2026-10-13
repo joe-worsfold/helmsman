@@ -12,7 +12,7 @@ user-invocable: true
 
 [Helmsman](../../../README.md) steers one stack: STAR (`.cursor/rules/helmsman-star.mdc`). Setup makes a new repo ready for agents on the first prompt. It does not build the product, add an app, add a domain, or choose a test.
 
-Run it in the new project's folder. Install this skill once in `~/.cursor/skills/helmsman-setup/` so it works in any folder.
+Run it in the new project's folder. Install this skill once in `~/.cursor/skills/helmsman-setup/` for Cursor, or `~/.claude/skills/helmsman-setup/` for Claude Code, so it works in any folder.
 
 ## Ask
 
@@ -231,9 +231,10 @@ In order. Each must pass before the next.
 2. The installed `node -v` and `pnpm -v` match the pins. `.helmsman/tools/checks/toolchain-latest.sh` fails otherwise. If they do not match, say which and stop. Installing a tool version on the machine is the user's call.
 3. `pnpm install`. It writes `pnpm-lock.yaml`, and `prepare` installs the lefthook pre-commit hook.
 4. `.helmsman/tools/ci/emit.sh` when CI is `github`.
-5. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
-6. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
-7. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
+5. `.helmsman/tools/claude/emit.sh`. It writes `.claude/rules/` from `.cursor/rules/`, links each skill into `.claude/skills/`, and writes `CLAUDE.md` as `@AGENTS.md` when there is none. Claude Code reads only `.claude/`, so without this step it sees `AGENTS.md` and no Helmsman rule. `pnpm setup:check` fails when `.claude/` drifts.
+6. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
+7. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
+8. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
 
 ## Stop
 
@@ -260,8 +261,9 @@ If a root `platform/` crate exists, move it to `packages/platform/rs` and drop t
 ```bash
 .helmsman/tools/checks/ensure-rust-tasks.sh
 .helmsman/tools/ci/emit.sh
+.helmsman/tools/claude/emit.sh
 ```
 
-`ensure-rust-tasks.sh` writes the Turbo scripts beside each crate. `emit.sh` rewrites the workflow for the languages and features the repo has. Do not hand-edit that workflow.
+`ensure-rust-tasks.sh` writes the Turbo scripts beside each crate. `ci/emit.sh` rewrites the workflow for the languages and features the repo has. Do not hand-edit that workflow. `claude/emit.sh` rewrites `.claude/rules/` and the `.claude/skills/` links after a rename. Edit the `.mdc` source, not the generated copy.
 
 If the repo has `.node-version` and no `.nvmrc`, write `.nvmrc` with the same version and delete `.node-version`. Point its Helmsman workflow at `node-version-file: .nvmrc`. Do not change an existing `.nvmrc`. Upstream changes reach that repo only after they have landed here and you re-setup. `helmsman-upstream` does not run there: the pin is not in the tree.

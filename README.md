@@ -20,7 +20,7 @@ A full setup copies:
 - `.github/PULL_REQUEST_TEMPLATE.md`
 - `.helmsman/tools/`, without `upstream/` and without `node_modules/`
 
-It then writes root files pinned to the publisher's current stable versions, writes `.helmsman/setup.md`, and generates `.github/workflows/helmsman.yml`. It does not add an app or a domain.
+It then runs `.helmsman/tools/claude/emit.sh`, so Claude Code reads the same rules and skills from `.claude/` (see [docs/claude-code.md](docs/claude-code.md)). It writes root files pinned to the publisher's current stable versions, writes `.helmsman/setup.md`, and generates `.github/workflows/helmsman.yml`. It does not add an app or a domain.
 
 It does not copy `eval/`, `docs/`, this README, or `.helmsman/tools/upstream/`.
 
@@ -40,7 +40,9 @@ Install the setup skill once, as a user skill:
 mkdir -p ~/.cursor/skills && cp -R .cursor/skills/helmsman-setup ~/.cursor/skills/
 ```
 
-Open an empty project folder in Cursor and run `/helmsman-setup`. It asks for the Helmsman checkout, the product name, and whether the night run may file issues or edit code. Both of those default to no.
+For Claude Code, copy it to `~/.claude/skills/` instead.
+
+Open an empty project folder in Cursor or Claude Code and run `/helmsman-setup`. It asks for the Helmsman checkout, the product name, and whether the night run may file issues or edit code. Both of those default to no.
 
 ## Commands
 
@@ -76,6 +78,7 @@ Run `/helmsman-setup` in the target repo. For a repo that already has Helmsman, 
 .helmsman/tools/checks/migrate-layout.sh
 .helmsman/tools/checks/ensure-rust-tasks.sh
 .helmsman/tools/ci/emit.sh
+.helmsman/tools/claude/emit.sh
 ```
 
 `migrate-layout.sh` moves `tools/helmsman/` to `.helmsman/tools/` when that old tree is still there. It then runs `migrate-names.sh`, which renames old paths, skills, rule files, lefthook commands, workflow job names, and pnpm scripts. A second run changes nothing. `emit.sh` rewrites the workflow. Do not hand-edit that workflow.

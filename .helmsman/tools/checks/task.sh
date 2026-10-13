@@ -280,6 +280,9 @@ setup_task() {
   if [[ -f "$root/.helmsman/tools/ci/emit.sh" ]]; then
     "$root/.helmsman/tools/ci/emit.sh" --check
   fi
+  if [[ -f "$root/.helmsman/tools/claude/emit.sh" ]]; then
+    "$root/.helmsman/tools/claude/emit.sh" --check
+  fi
 }
 
 diff_task() {

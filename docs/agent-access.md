@@ -24,4 +24,4 @@ The delivery report is `DORA_OPERATIONAL_REPORT.md` under the ignore rule. It is
 
 ## Sidecar skills
 
-Copy a Helmsman skill folder into the consumer's `.cursor/skills/`. Leave the consumer's rules and other skills in place. Do not replace `.cursor/` with this repository's copy. A skill folder that is already there is the consumer's; do not overwrite it.
+Copy a Helmsman skill folder into the consumer's `.cursor/skills/`, or `.claude/skills/` for Claude Code. Leave the consumer's rules and other skills in place. Do not replace `.cursor/` with this repository's copy. A skill folder that is already there is the consumer's; do not overwrite it.
