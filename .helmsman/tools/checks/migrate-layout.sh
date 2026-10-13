@@ -110,6 +110,9 @@ def skip(rel):
         return True
     if rel.endswith("/migrate-layout.sh") or rel.endswith("/migrate-layout.bats"):
         return True
+    # These name the old layout on purpose, to fail when it is present.
+    if rel.endswith("/checks/tool-home.sh") or rel.endswith("/checks/ci.bats"):
+        return True
     if rel == ".cursor/skills/helmsman-setup/SKILL.md":
         return True
     if rel.startswith(".helmsman/tools/upstream/ponytail/") or rel.startswith(".helmsman/tools/upstream/cursor-plugins/"):

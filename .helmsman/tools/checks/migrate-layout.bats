@@ -117,3 +117,17 @@ seed_old() {
   run grep -F '.helmsman/tools/eslint-config' note.md
   [ "$status" -eq 1 ]
 }
+
+@test "the checks that detect the old layout keep naming it" {
+  checks="$(cd "$(dirname "$BATS_TEST_FILENAME")" && pwd)"
+  mkdir -p .helmsman/tools/checks .helmsman
+  cp "$checks/tool-home.sh" "$checks/ci.bats" .helmsman/tools/checks/
+  printf '%s\n' '.helmsman/*' '!.helmsman/setup.md' '!.helmsman/tools/' '!.helmsman/tools/**' > .gitignore
+  printf '%s\n' '# Setup' > .helmsman/setup.md
+  git add -A
+  git commit -q -m init
+  run "$migrate"
+  [ "$status" -eq 0 ]
+  cmp -s "$checks/tool-home.sh" .helmsman/tools/checks/tool-home.sh
+  cmp -s "$checks/ci.bats" .helmsman/tools/checks/ci.bats
+}
