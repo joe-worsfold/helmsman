@@ -101,6 +101,14 @@ teardown() {
   [ "$(cat CLAUDE.md)" = "# Our notes" ]
 }
 
+@test "a CLAUDE.md that imports ./AGENTS.md passes" {
+  printf '%s\n' '# Our notes' '@./AGENTS.md' > CLAUDE.md
+  "$emit"
+  run "$emit" --check
+  [ "$status" -eq 0 ]
+  [ "$(head -n 1 CLAUDE.md)" = "# Our notes" ]
+}
+
 @test "a repo with no Cursor rules or skills is skipped" {
   rm -rf .cursor
   run "$emit" --check

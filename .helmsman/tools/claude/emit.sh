@@ -40,6 +40,7 @@ fi
 
 MODE="$mode" ALWAYS="helmsman-writing" python3 - << 'PY'
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -158,7 +159,7 @@ dot_claude = Path(".claude/CLAUDE.md")
 if agents.is_file():
     if claude.exists() or dot_claude.exists():
         own = claude if claude.exists() else dot_claude
-        if "@AGENTS.md" not in own.read_text(encoding="utf-8"):
+        if not re.search(r"(^|\s)@(\./)?AGENTS\.md\b", own.read_text(encoding="utf-8")):
             problems.append(f"{own} does not import @AGENTS.md, so Claude never reads AGENTS.md")
     elif mode == "check":
         problems.append("CLAUDE.md is missing. Claude reads AGENTS.md through it")
