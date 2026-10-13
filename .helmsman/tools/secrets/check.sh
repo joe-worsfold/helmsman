@@ -29,6 +29,10 @@ while IFS= read -r -d '' file; do
       continue
       ;;
   esac
+  # A tracked symlink is a path. Its target is scanned under its own name.
+  if [[ -L "$file" ]]; then
+    continue
+  fi
   hits="$(grep -nIE -- "$aws|$pem|$github|$pat|$stripe|$slack" "$file" || true)"
   if [[ -n "$hits" ]]; then
     echo "helmsman: secret pattern in $file" >&2

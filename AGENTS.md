@@ -17,6 +17,7 @@ Agents work in draft. Prove the change locally with `pnpm check` and the pre-com
 | The review comment still matches the pull request patch | `pnpm review:current` |
 | The upstream snapshot matches the pin | `pnpm setup:check` |
 | The workflow file matches the emitter | `pnpm setup:check` |
+| `.claude/` and `CLAUDE.md` match `.cursor/` | `pnpm setup:check` |
 | Lint, format, types, unused code, and tests | `pnpm check` |
 
 `helmsman-correct` keeps this table current. A rule with nothing in the second column is not enforced.

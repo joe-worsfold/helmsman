@@ -4,7 +4,7 @@ Copy the skills. Keep the repo's own engineering standards. The copied skills ar
 
 ## Skills-only copy checklist
 
-Copy into `<your-repo>/.cursor/skills/`. Do not replace the repo's other skills or rules. Open the repo in Cursor and invoke the skill by name. A skill does not load on its own.
+Copy into `<your-repo>/.cursor/skills/` for Cursor, or `<your-repo>/.claude/skills/` for Claude Code. The `SKILL.md` format is the same. Do not replace the repo's other skills or rules. Open the repo and invoke the skill by name. A skill does not load on its own.
 
 | Copy | When |
 | --- | --- |

@@ -56,7 +56,7 @@ Exclude, and list the exclusion on the coverage line:
 - declarations (`*.d.ts`)
 - fixtures
 - vendored code and `node_modules`, including the pinned upstream snapshot at `.helmsman/tools/upstream/`
-- copied Helmsman skills and tooling (`.cursor/skills/helmsman-*`, `.cursor/rules/helmsman*`, `.helmsman/`, and a vendored Helmsman package tree this repo does not maintain as its product)
+- copied Helmsman skills and tooling (`.cursor/skills/helmsman-*`, `.cursor/rules/helmsman*`, `.claude/skills/helmsman-*`, `.claude/rules/helmsman*`, `.helmsman/`, and a vendored Helmsman package tree this repo does not maintain as its product)
 
 In the Helmsman repository those skill and package trees are the product. Still exclude tests, generated code, declarations, and fixtures there.
 
