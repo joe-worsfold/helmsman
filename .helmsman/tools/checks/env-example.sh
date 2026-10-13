@@ -15,7 +15,7 @@ fi
 cd "$root"
 
 python3 - "$root" << 'PY'
-import os, re, sys
+import os, re, subprocess, sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
@@ -60,6 +60,16 @@ builtin_env = {"CI", "NODE_ENV", "MODE", "DEV", "PROD", "SSR", "BASE_URL"}
 names = set()
 
 def files():
+    # Files git would commit: a build output in .gitignore (storybook-static, dist) is not product code.
+    listed = subprocess.run(
+        ["git", "-C", str(root), "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        capture_output=True,
+    )
+    if listed.returncode == 0:
+        for rel in listed.stdout.decode("utf-8", "replace").split("\0"):
+            if rel and not any(part.startswith(".") for part in Path(rel).parts):
+                yield root / rel
+        return
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [name for name in dirnames if name not in skip_dirs and not name.startswith(".")]
         for filename in filenames:

@@ -65,3 +65,12 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"no env reads"* ]]
 }
+
+@test "a gitignored build output is not product code" {
+  printf '%s\n' 'storybook-static/' > .gitignore
+  mkdir -p storybook-static
+  printf '%s\n' 'const n = process.env.DEBUG_PRINT_LIMIT;' > storybook-static/iframe.js
+  run "$checks/env-example.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"no env reads"* ]]
+}
