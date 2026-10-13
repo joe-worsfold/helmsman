@@ -26,7 +26,7 @@ def walk(directory):
             yield path
 
 def parse_tsconfig(text):
-    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    # Comments are stripped in one string-aware pass: "@/*" and "src/**/*.ts" are strings, not a comment.
     out = []
     index = 0
     in_string = False
@@ -52,6 +52,12 @@ def parse_tsconfig(text):
             index = text.find("\n", index)
             if index == -1:
                 break
+            continue
+        if char == "/" and index + 1 < len(text) and text[index + 1] == "*":
+            end = text.find("*/", index + 2)
+            if end == -1:
+                break
+            index = end + 2
             continue
         out.append(char)
         index += 1
