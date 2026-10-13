@@ -29,3 +29,10 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"strict tsconfig ok"* ]]
 }
+
+@test "a glob or path alias inside a string is not a comment" {
+  printf '%s\n' '{' '  /* real comment */' '  "compilerOptions": {' '    "strict": true,' '    "paths": { "@/*": ["./src/*"] }' '  },' '  "exclude": ["src/**/*.test.ts"]' '}' > tsconfig.json
+  run "$checks/../tsc/check.sh" --strict
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"strict tsconfig ok"* ]]
+}
