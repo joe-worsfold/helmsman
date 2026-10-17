@@ -22,96 +22,53 @@ When the user asked only for a review, do not modify code, open pull requests, o
 - **Load.** State the load you assumed, from the README or the deploy config. Judge scale against that. One person and a script is not many processes.
 - **Correctness.** This pass owns bugs, edges, and broken developer setup when no automated bug review is installed. Edges include empty, zero, the last item, rounding, and time zones. A symptom patch is a finding: a guard on the null that crashed, a catch that drops the error, a cast that silences the type, a retry, a sleep or a longer timeout, a skipped test, a weaker assertion, an updated snapshot, or a special case that leaves the cause in place. Name the cause before the edit. Do this pass before you read anyone else's comments. After it, do not restate a comment automated review already posted. If none is posted, the correctness findings stay in this report. Say which.
 - **CI and deterministic checks:** Treat the compiler, linter, tests, unused-code check, infrastructure validation, and secret scan as authoritative. Do not restate a green check; that status is already on the change. If a required check is failing, name it under Blocker. Do not substitute a manual re-run for required gates unless the user asked you to run them for evidence.
+- **Lenses.** Every pass applies three lenses and names them in the record: `helmsman-standards` with the matched file rules, the checklist (the ponytail-review finding shape: a concrete case, a proof rung, the smallest fix), and thermo-nuclear (complexity a restructuring would delete, which is Judo).
+- **Model.** Run the main pass on the model in `Review pass model` in `.helmsman/setup.md`. When the session runs a different model, run the pass in a subagent on that model if the tool allows it. When that line is `none` or missing, or no subagent can take that model, use the session's model. The record names the model that ran, not the one asked for.
 - **Second pass.** On a diff of more than about 15 relevant files, or when the user asks, run a second pass on a different model family from the one that wrote the diff. Read `Review model` in `.helmsman/setup.md`. When that line is `none` or missing, pick a different family and name it in the comment. Do not hard-code a model slug in this skill. Weight a finding both passes raise. Map Act on to Blocker, Judo, or High. Map Consider to Medium, Low, or Fix forward. Map Noted or Dismissed to Nit, or one line with a reason. Deduplicate. The automation's time ceiling still holds. Do not start the second pass when that ceiling is already close. The single pass is the default.
 
 ## Output format
 
-The comment a person reads uses the verdict and the finding labels. A Blocker is a presumptive blocker. A Judo finding is a restructuring that deletes complexity. High, Medium, and Low are priority, and the proof rung sits beside them. A Fix forward finding is deferred. A Nit is optional. Use these exact headings:
+A reader sees the verdict and what to do without scrolling. Print only what exists. An empty label gets no heading, no table, and no row.
 
-```markdown
-## Summary
+````markdown
+### ❌ Request changes · 🟠 1 High · 🔵 1 Low · ⚪ 1 Nit
 
-**Verdict:** Approve | Request changes
+What this change does, in one sentence. Load: the load you assumed, and where you read it, or `Not stated`.
 
-**What this change does:** two or three sentences.
+**Do before merge**
+- [ ] **#1** `path:line` the smallest fix
 
-**Load:** the load you assumed, and where you read it. Or `Not stated.`
+| # | Label | Where | Case → fix |
+| - | ----- | ----- | ---------- |
+| 1 | 🟠 High · ran | `path:line` | The concrete case → the smallest fix. **Skip:** what stays wrong |
+| 2 | 🔵 Low · cited | `path:line` | The concrete case → the smallest fix. ✔ Fixed `abc1234` |
+| 3 | ⚪ Nit · cited | `path:line` | The cosmetic case → optional fix |
 
-**Blocker:** what must be fixed before merge, and why (data loss, auth, a broken contract, a gate bypass, a setup break, a feature-gate leak). Or `None.`
+None: Blocker, Judo, Medium, Fix forward.
+Not checked: what mattered and was not read, in one line. Or `None.`
 
-**Judo:** the restructuring that would delete complexity, and whether the comment justifies keeping the current shape. Or `None.`
+<details><summary>Review record</summary>
 
-**High:** a correctness break you traced end to end. Or `None.`
-
-**Medium:** a narrower real correctness finding. Or `None.`
-
-**Low:** a real finding that can wait. Or `None.`
-
-**Fix forward:** what can wait, and why. Or `None.`
-
-**Nit:** cosmetic notes. Optional. Or `None.`
-
-## Blocker
-
-| # | Location | What this is | Problem | Proof | Fix | If we skip it |
-| - | -------- | ------------ | ------- | ----- | --- | ------------- |
-| 1 | path:line | ... | the concrete case | cited, excluded, ran, or reproduced | the smallest fix | what remains wrong |
-
-## Judo
-
-| # | Location | What this is | Problem | Proof | Fix | If we skip it |
-| - | -------- | ------------ | ------- | ----- | --- | ------------- |
-| 2 | path:line | ... | the concrete case | cited, excluded, ran, or reproduced | the smallest fix | what remains wrong |
-
-## High
-
-| # | Location | What this is | Problem | Proof | Fix | If we skip it |
-| - | -------- | ------------ | ------- | ----- | --- | ------------- |
-| 3 | path:line | ... | the concrete case | cited, excluded, ran, or reproduced | the smallest fix | what remains wrong |
-
-## Medium
-
-| # | Location | What this is | Problem | Proof | Fix | If we skip it |
-| - | -------- | ------------ | ------- | ----- | --- | ------------- |
-| 4 | path:line | ... | the concrete case | cited, excluded, ran, or reproduced | the smallest fix | what remains wrong |
-
-## Low
-
-| # | Location | What this is | Problem | Proof | Fix | If we skip it |
-| - | -------- | ------------ | ------- | ----- | --- | ------------- |
-| 5 | path:line | ... | the concrete case | cited or higher | the smallest fix | what remains |
-
-## Fix forward
-
-| # | Location | What this is | Problem | Proof | Fix | If we skip it |
-| - | -------- | ------------ | ------- | ----- | --- | ------------- |
-| 6 | path:line | ... | the concrete case | cited or higher, or why it can wait | the smallest fix, or why it can wait | what remains |
-
-## Nit
-
-| # | Location | What this is | Problem | Proof | Fix | If we skip it |
-| - | -------- | ------------ | ------- | ----- | --- | ------------- |
-| 7 | path:line | ... | the cosmetic case | cited | optional | nothing that blocks merge |
-
-Verdict: Approve
+```text
+Verdict: Request changes
 Reviewed: <full sha of HEAD>
 Base: <full sha of the pull request base>
 Patch: <patch-id of `git diff <base> HEAD`>
-
-## Recommendation
-
-One verdict. `Approve` when no Blocker, no unjustified Judo, and no High or Medium finding remains. Low, Fix forward, and Nit can still Approve. `Request changes` when any of those four is open. Name the numbers: `fix 1 and 3 first`. Advisory; not a substitute for required CI or human approval on high-risk changes. The plain `Verdict:` line matches this recommendation. `.helmsman/tools/checks/review-current.sh` reads that line.
-
-## Not checked
-
-One line. What mattered and was not read. Or `None.`
+Lenses: helmsman-standards, ponytail-review, thermo-nuclear · Model: <model id>
 ```
 
-Number findings across the label sections. Every finding has all four parts. No concrete case, no finding. Prefer a fix that deletes.
+</details>
+````
 
-Use `_None._` in a section when empty. Do not print an empty table.
+- **Header.** `✅ Approve` or `❌ Request changes`, then one count per label that has a finding, most severe first. Icons: 🔴 Blocker, 🟣 Judo, 🟠 High, 🟡 Medium, 🔵 Low, ⏭️ Fix forward, ⚪ Nit. Add `(fixed)` to a count when every finding under it was fixed before posting.
+- **Do before merge.** One unchecked task per open Blocker, unjustified Judo, High, and Medium, in table order. Leave the block out when none is open.
+- **Table.** One table, rows most severe first, numbered from 1. The label cell carries the icon, the label, and the proof rung (said, cited, excluded, ran, or reproduced). The last cell is the concrete case, an arrow, and the smallest fix. Blocker, Judo, High, and Medium add **Skip:** and what stays wrong. A finding fixed before posting keeps its row and ends with `✔ Fixed <short sha>`. A Fix forward row ends with the issue `fix-forward.sh` opened. With no findings, write `No findings.` in place of the table. Write a `|` inside a cell as `\|`, or the row splits.
+- **None line.** One line that lists every label with no finding. Leave it out when every label has one.
+- **Record.** The `Verdict`, `Reviewed`, `Base`, `Patch`, and `Lenses` lines sit in a `text` code block inside the collapsed block, each on its own line with no other text. `.helmsman/tools/checks/review-current.sh` reads them there. The plain `Verdict:` line matches the header. Advisory: the review does not replace required CI or human approval on high-risk changes.
 
-Map the checklist onto the sections. Do not add a second set of headings. A bug, a setup break, or a feature-gate leak that the checklist calls Blocker goes under Blocker. A structural miss the checklist calls Judo goes under Judo. A correctness finding uses High, Medium, or Low. A leftover that can wait goes under Fix forward. A cosmetic note goes under Nit.
+Every finding has a concrete case, a proof rung, and a fix. No concrete case, no finding. Prefer a fix that deletes.
+
+Map the checklist onto the labels. A bug, a setup break, or a feature-gate leak that the checklist calls Blocker is a Blocker. A structural miss the checklist calls Judo is Judo. A correctness finding is High, Medium, or Low. A leftover that can wait is Fix forward. A cosmetic note is a Nit.
 
 Do the empty-input, boundary, and concurrency assessment from the checklist. Put it in the table only when it is a finding. When it is covered or N/A, do not narrate it.
 

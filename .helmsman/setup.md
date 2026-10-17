@@ -15,6 +15,7 @@ Fix: no
 Upstream PR: no
 Correct PR: no
 Review model: none
+Review pass model: claude-opus-5-5
 Nightly fix: no
 Nightly max PRs: 3
 Nightly max tokens: 200000

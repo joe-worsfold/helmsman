@@ -19,7 +19,7 @@ Finish within 10 minutes. Most reviews should finish sooner. Ten minutes is the 
 - Findings must concern the pull-request diff. You may inspect targeted unchanged context, direct callers or dependencies, and search for an existing implementation when that is needed to judge reuse, boundaries, or a duplicate. Do not perform an unrelated repository-wide audit.
 - Do not install, build, test, lint, deploy, or run infrastructure tooling.
 - Review up to 50 relevant changed files, excluding generated files and lockfiles. Prioritize domain and contracts, entry points, shared libraries, then infrastructure.
-- If the review is truncated, still post every confirmed finding. After the skill output, add `## Review coverage` listing what was reviewed, then: `Incomplete review: this change exceeds the automation review budget. Consider splitting it into smaller changes.` Do not recommend Approve for a truncated review.
+- If the review is truncated, still post every confirmed finding. Before the record block, add one line: `Incomplete review: reviewed <n> of <m> files. Consider splitting this change.` Do not recommend Approve for a truncated review.
 - Advisory only. Never submit a GitHub review state. The comment's Verdict line is the review.
 - Do the review skill's correctness pass even when no automated bug review is installed. After that pass, do not restate comments it already posted. Say which case you are in.
 - A second pass on a different model family is allowed only as the review skill describes, and only inside this time ceiling. A truncated review is Request changes. The comment records `Verdict`, `Reviewed`, `Base`, and `Patch`.
@@ -38,8 +38,5 @@ Prefix the skill's exact output with:
 
 ```markdown
 <!-- helmsman:standards-review -->
-
-## Standards review
-
-_advisory — does not block merge_
+<sub>Standards review · advisory, does not block merge</sub>
 ```
