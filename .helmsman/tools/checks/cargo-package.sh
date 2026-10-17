@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Turbo runs this inside one Rust package directory.
-# lint is clippy, format is rustfmt, test is cargo test.
+# lint is clippy, format is rustfmt, test is cargo test on the library and binaries.
 set -euo pipefail
 
 mode="${1:-}"
@@ -26,7 +26,20 @@ fi
 
 case "$mode" in
   test)
-    cargo test --manifest-path "$manifest"
+    # Unit tests only. Each tests/*.rs file is a Cargo integration target, and an
+    # integration test needs the local stack, so it runs from pnpm test:integration.
+    args=(--manifest-path "$manifest")
+    if [[ -f src/lib.rs ]] || grep -q '^\[lib\]' Cargo.toml; then
+      args+=(--lib)
+    fi
+    if [[ -f src/main.rs || -d src/bin ]] || grep -q '^\[\[bin\]\]' Cargo.toml; then
+      args+=(--bins)
+    fi
+    if [[ ${#args[@]} -eq 2 ]]; then
+      echo "helmsman: no library or binary in $PWD. Unit tests skipped."
+      exit 0
+    fi
+    cargo test "${args[@]}"
     exit 0
     ;;
   format)
