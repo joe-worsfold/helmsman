@@ -17,6 +17,7 @@ want() {
 }
 
 harness_test() {
+  want harness || return 0
   if [[ ! -f eval/flake.sh ]]; then
     echo "helmsman: no harness suite."
     return 0
@@ -51,72 +52,75 @@ has_ts_package() {
   return 1
 }
 
+shell_lint() {
+  want bash || return 0
+  "$here/bash-n.sh"
+  "$here/no-silences.sh"
+}
+
+run_languages() {
+  local task="$1" lang
+  shift
+  for lang in "$@"; do
+    if want "$lang"; then "$here/task.sh" "$lang" "$task"; fi
+  done
+}
+
+# Root or harness tsc, for a repo whose TypeScript is not in a package.
+typecheck_root() {
+  if [[ -f eval/tsconfig.json ]] && want harness; then
+    run_tsc eval/tsconfig.json
+  elif ! has_ts_package && [[ -f tsconfig.json ]] && want ts; then
+    run_tsc tsconfig.json
+  fi
+}
+
+# The CI smoke job installs the Playwright browser only when the setup file names Playwright.
+install_playwright() {
+  [[ "${GITHUB_ACTIONS:-}" == "true" && -f .helmsman/setup.md ]] || return 0
+  grep -qi playwright .helmsman/setup.md || return 0
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm exec playwright install --with-deps chromium
+  fi
+}
+
 case "$cmd" in
   lint)
-    if want ts; then "$here/task.sh" ts lint; fi
-    if want rust; then "$here/task.sh" rust lint; fi
-    if want python; then "$here/task.sh" python lint; fi
-    if want bash; then
-      "$here/bash-n.sh"
-      "$here/no-silences.sh"
-    fi
+    run_languages lint ts rust python
+    shell_lint
     ;;
   format)
-    if want ts; then "$here/task.sh" ts format; fi
-    if want rust; then "$here/task.sh" rust format; fi
+    run_languages format ts rust
+    # Ruff format is part of the Python lint, so only a Python-only run asks for it here.
     if [[ "$filter" == "python" ]]; then "$here/task.sh" python lint; fi
     ;;
   typecheck)
-    if want ts; then "$here/task.sh" ts typecheck; fi
-    if want python; then "$here/task.sh" python typecheck; fi
-    if [[ -f eval/tsconfig.json && ( -z "$filter" || "$filter" == "harness" ) ]]; then
-      run_tsc eval/tsconfig.json
-    elif ! has_ts_package && [[ -f tsconfig.json && ( -z "$filter" || "$filter" == "ts" ) ]]; then
-      run_tsc tsconfig.json
-    fi
+    run_languages typecheck ts python
+    typecheck_root
     ;;
   unused)
     "$here/task.sh" ts unused
     ;;
   test)
     "$here/repo-checks.sh"
-    if want ts; then "$here/task.sh" ts test; fi
-    if want rust; then "$here/task.sh" rust test; fi
-    if want python; then "$here/task.sh" python test; fi
-    if want harness || [[ -z "$filter" ]]; then
-      harness_test
-    fi
+    run_languages test ts rust python
+    harness_test
     ;;
-  integration)
-    "$here/task.sh" integration
+  integration | audit | diff-guard | plain)
+    "$here/task.sh" "$cmd"
     ;;
   smoke)
-    if [[ "${GITHUB_ACTIONS:-}" == "true" && -f .helmsman/setup.md ]] && grep -qi playwright .helmsman/setup.md; then
-      if command -v pnpm >/dev/null 2>&1; then
-        pnpm exec playwright install --with-deps chromium
-      fi
-    fi
+    install_playwright
     "$here/task.sh" smoke
-    ;;
-  audit)
-    "$here/task.sh" audit
     ;;
   setup)
     "$here/task.sh" setup
     "$here/repo-checks.sh"
     ;;
-  diff-guard)
-    "$here/task.sh" diff-guard
-    ;;
-  plain)
-    "$here/task.sh" plain
-    ;;
   check)
-    HELMSMAN_FILTER= "$here/pnpm-task.sh" lint
-    HELMSMAN_FILTER= "$here/pnpm-task.sh" format
-    HELMSMAN_FILTER= "$here/pnpm-task.sh" typecheck
-    HELMSMAN_FILTER= "$here/pnpm-task.sh" unused
-    HELMSMAN_FILTER= "$here/pnpm-task.sh" test
+    for step in lint format typecheck unused test; do
+      HELMSMAN_FILTER= "$here/pnpm-task.sh" "$step"
+    done
     ;;
   *)
     echo "helmsman: pnpm-task.sh lint|format|typecheck|unused|test|integration|smoke|audit|setup|diff-guard|plain|check" >&2
