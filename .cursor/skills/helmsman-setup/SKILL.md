@@ -247,7 +247,7 @@ Report what ran and each resolved version. If a command fails, stop there and na
 
 ## Re-setup
 
-An existing STAR repo takes the Copy list again. Do not replace its apps, domains, or lockfiles. Do not copy `.helmsman/tools/upstream/`. Copy `.helmsman/tools/` first (no `node_modules/`, no `upstream/`), then from the target repo root run:
+An existing STAR repo that already has `.helmsman/tools/update.sh` runs it instead of copying by hand: `.helmsman/tools/update.sh <helmsman-vX.Y.Z>`. It copies the Copy list from that release, moves every pin to its commit, and re-runs the emitters. Otherwise, an existing STAR repo takes the Copy list again. Do not replace its apps, domains, or lockfiles. Do not copy `.helmsman/tools/upstream/`. Copy `.helmsman/tools/` first (no `node_modules/`, no `upstream/`), then from the target repo root run:
 
 ```bash
 .helmsman/tools/checks/migrate-layout.sh

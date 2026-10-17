@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "4b1c2362c58d7093fe0d5ab44281673f79ea7db4",
+  "include-component-in-tag": true,
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "component": "helmsman",
+      "package-name": "helmsman",
+      "exclude-paths": [".helmsman/tools/eslint", ".helmsman/tools/knip"],
+      "extra-files": [
+        { "type": "json", "path": ".claude-plugin/plugin.json", "jsonpath": "$.version" },
+        { "type": "json", "path": ".cursor-plugin/plugin.json", "jsonpath": "$.version" }
+      ]
+    },
+    ".helmsman/tools/eslint": { "release-type": "node", "component": "eslint", "package-name": "@helmsman/eslint" },
+    ".helmsman/tools/knip": { "release-type": "node", "component": "knip", "package-name": "@helmsman/knip" }
+  }
+}
