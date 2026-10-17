@@ -26,7 +26,7 @@ It does not copy `eval/`, `docs/`, this README, or `.helmsman/tools/upstream/`.
 
 ## Prerequisites
 
-Node 26.11.1, matching `.nvmrc` and `engines`. pnpm 12 through corepack. [bats](https://github.com/bats-core/bats-core) for the shell tests.
+Node 26.12.0, matching `.nvmrc` and `engines`. pnpm 12 through corepack. [bats](https://github.com/bats-core/bats-core) for the shell tests.
 
 ```bash
 pnpm install --frozen-lockfile

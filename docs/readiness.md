@@ -41,7 +41,7 @@ Recommended shape: a critical-path smoke on the pull request, and the exhaustive
 | 2 | Local setup | pass | native | `README.md` |
 | 2 | Docs match the tree | pass | helmsman | `docs-commands.sh` runs inside `pnpm setup:check`. |
 | 2 | Scoped local check | pass | helmsman | `lefthook.yml` globs, and `HELMSMAN_AFFECTED=1` in `pnpm-task.sh`. |
-| 2 | Pinned toolchain | pass | native | `.nvmrc` is `26.11.1`. No `Cargo.toml`, so a root `rust-toolchain.toml` is not required. |
+| 2 | Pinned toolchain | pass | native | `.nvmrc` is `26.12.0`. No `Cargo.toml`, so a root `rust-toolchain.toml` is not required. |
 | 3 | Secrets and dependencies | pass | helmsman | The secret scan runs in `pnpm setup:check` and in `pnpm audit:all`. The audit job runs `pnpm audit --audit-level=high` on the root lock and on `.helmsman/tools/eslint` and `.helmsman/tools/knip`. gitleaks is not installed here; the built-in patterns still fail the commit. |
 | 3 | Policy scan | n/a | absent | No application SAST target. Infrastructure is SST; there is no Terraform or Checkov adapter. |
 | 3 | Boundaries | pass | helmsman | `.helmsman/tools/eslint/check.mjs` rejects `import "scripts/..."`. The generated hand-edit gate rejects a lockfile or `generated/` edit. The `eslint-package` job runs that file when `.helmsman/tools/eslint` changes. |
