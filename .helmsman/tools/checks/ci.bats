@@ -470,3 +470,16 @@ EOF
   [ "$status" -eq 0 ]
   grep -q 'toolchain: 1.98.1' .github/workflows/helmsman.yml
 }
+
+@test "every emitted action is pinned to a commit with its ref in a comment" {
+  write_setup "rust, python"
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  printf '%s\n' '[project]' 'name = "demo"' > pyproject.toml
+  mkdir -p apps/web
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  run grep -E 'uses: ' .github/workflows/helmsman.yml
+  [ "$status" -eq 0 ]
+  run bash -c "grep -E 'uses: ' .github/workflows/helmsman.yml | grep -vE '@[0-9a-f]{40} # [A-Za-z0-9.-]+$'"
+  [ "$status" -eq 1 ]
+}

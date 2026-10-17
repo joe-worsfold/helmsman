@@ -12,6 +12,8 @@ Push runs on `main` only. A pull request is one workflow, not a second copy from
 
 Wall clock stays under 5 minutes. `changes` runs first, except on `edited`, where it is skipped. Every other job `needs: changes` and starts only when its path output is true. `prove (web)` uses `always()` so a body edit can run it after `changes` was skipped. Those jobs run in parallel. GitHub bills the sum of job minutes, rounded up per job. A skipped job is free. A job that starts is at least one minute. A draft costs nothing. An `edited` event with no `apps/web` starts no job.
 
+Every action the emitter writes is pinned to a commit, with the tag or branch it came from in a comment, so a moved tag cannot change a workflow without a Helmsman commit. `.helmsman/tools/ci/pins.sh` moves each pin to the commit its ref points at now and regenerates the workflow. `--dry-run` lists what would move.
+
 `pnpm lint:actions` is [actionlint](https://github.com/rhysd/actionlint) v1.7.12. `.helmsman/tools/checks/actionlint.sh` installs it with the official download script pinned to commit `914e7df21a07ef503a81201c76d2b11c789d3fca`. The CI job calls that same script and passes the pin in the environment. The first local run downloads the binary into the user cache.
 
 ## Script to job
