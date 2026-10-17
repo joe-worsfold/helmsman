@@ -53,6 +53,7 @@ teardown() {
 
 fake_source() {
   fake="$(mktemp -d)"
+  mkdir -p "$fake/.helmsman/tools"
   rsync -a --exclude node_modules --exclude upstream "$src/.helmsman/tools/" "$fake/.helmsman/tools/"
   mkdir -p "$fake/.github"
   cp "$src/lefthook.yml" "$fake/lefthook.yml"

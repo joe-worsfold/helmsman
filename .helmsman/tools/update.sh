@@ -120,6 +120,8 @@ main() {
     return 0
   fi
 
+  # rsync on Linux does not create a missing parent folder.
+  mkdir -p .helmsman/tools
   rsync -a --delete --exclude node_modules --exclude upstream "$src/.helmsman/tools/" .helmsman/tools/
   local kind dir name
   for kind in rules skills automations; do
