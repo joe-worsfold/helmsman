@@ -8,7 +8,7 @@ The harness does not load Cursor rules or skills into a model. `.helmsman/tools/
 
 ## Run
 
-From the repository root, with Node 26.11.1:
+From the repository root, with Node 26.12.0:
 
 ```bash
 ./eval/run.sh
