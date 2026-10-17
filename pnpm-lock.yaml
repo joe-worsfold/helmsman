@@ -169,6 +169,9 @@ importers:
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
+      bats:
+        specifier: ^1.13.0
+        version: 1.13.0
       lefthook:
         specifier: ^2.2.1
         version: 2.2.1
@@ -301,6 +304,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  bats@1.13.0:
+    resolution: {integrity: sha512-giSYKGTOcPZyJDbfbTtzAedLcNWdjCLbXYU3/MwPnjyvDXzu6Dgw8d2M+8jHhZXSmsCMSQqCp+YBsJ603UO4vQ==}
+    hasBin: true
+
   lefthook-darwin-arm64@2.2.1:
     resolution: {integrity: sha512-SyuDBT5HqNQfi607vMHrYJu45bRN7JoIFdyxLjEPVe34UnZJCesmeYBODEYTyCfRZjPOaTbton4Padu+qvqfCQ==}
     cpu: [arm64]
@@ -428,6 +435,8 @@ snapshots:
 
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
+
+  bats@1.13.0: {}
 
   lefthook-darwin-arm64@2.2.1:
     optional: true

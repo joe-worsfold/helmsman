@@ -22,10 +22,6 @@ harness_test() {
     return 0
   fi
   if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
-    if ! command -v bats >/dev/null 2>&1; then
-      sudo apt-get update
-      sudo apt-get install -y bats
-    fi
     ./eval/flake.sh
     ./eval/trials.sh 3
     return 0
