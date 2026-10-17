@@ -6,7 +6,14 @@
 #
 # A pin is `owner/repo@<40-char sha> # <ref>` in ci/emit.sh or .github/workflows/release.yml.
 # The ref in the comment is what gets resolved, so a pin follows its major tag on purpose.
+# Run it in the Helmsman repo. A repo that uses Helmsman gets new pins from update.sh; editing
+# its copy of ci/emit.sh makes a local fork that the next update overwrites.
 set -euo pipefail
+
+if [[ ! -f "$(git rev-parse --show-toplevel)/.claude-plugin/plugin.json" ]]; then
+  echo "helmsman: pins.sh runs in the Helmsman repo. Run .helmsman/tools/update.sh here instead." >&2
+  exit 1
+fi
 
 dry=0
 case "${1:-}" in
