@@ -2,21 +2,38 @@
   "name": "helmsman",
   "displayName": "Helmsman",
   "description": "Helmsman standards, review, and delivery skills, the always-on rules, and the agent watermark hook.",
-  "author": { "name": "Joe Worsfold", "url": "https://github.com/joe-worsfold" },
+  "author": {
+    "name": "Joe Worsfold",
+    "url": "https://github.com/joe-worsfold"
+  },
   "homepage": "https://github.com/joe-worsfold/helmsman",
   "repository": "https://github.com/joe-worsfold/helmsman",
   "license": "MIT",
-  "skills": ["./.cursor/skills/"],
+  "skills": [
+    "./.cursor/skills/"
+  ],
   "hooks": {
     "SessionStart": [
       {
-        "hooks": [{ "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/.helmsman/tools/claude/emit.sh --context", "timeout": 10 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/.helmsman/tools/claude/emit.sh --context",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PreToolUse": [
       {
         "matcher": "^(Bash|mcp__.*)$",
-        "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}\"/.helmsman/tools/watermark/hook.mjs", "timeout": 10 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}\"/.helmsman/tools/watermark/hook.mjs",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

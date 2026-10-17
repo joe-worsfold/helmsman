@@ -72,7 +72,15 @@ The job map, the path gates, and the minute estimate are [docs/guardrails.md](do
 
 ## Set it up in a repo
 
-Run `/helmsman-setup` in the target repo. For a repo that already has Helmsman, copy `.helmsman/tools/` again (no `node_modules/`, no `upstream/`), then from the target root run:
+Run `/helmsman-setup` in the target repo. To move a repo that already has Helmsman to a release, run `.helmsman/tools/update.sh` (the latest `helmsman-v*` release) or `.helmsman/tools/update.sh helmsman-v0.2.0`. It copies that release's files, moves the `Helmsman:` setup line and the plugin pin to its commit, and re-runs the emitters. `--dry-run` prints the file changes first.
+
+## Releases
+
+Every merge to `main` runs `.helmsman/tools/release/release.sh`. It reads the commit subjects since the last `helmsman-v*` tag. With a squash merge, that subject is the pull request title. `feat` moves the minor version, `fix` and `perf` the patch, and a breaking change (`type!:` or `BREAKING CHANGE`) the major version from 1.0.0 on, the minor before it. Any other type publishes nothing. When a release is due, it tags the merge commit and creates a GitHub release whose notes list the merged pull requests. The changelog is the list of releases. No file in the repository carries the version; the tag does. `release.sh --dry-run` prints the next tag.
+
+## Older layouts
+
+For a repo on a layout from before `update.sh`, copy `.helmsman/tools/` again (no `node_modules/`, no `upstream/`), then from the target root run:
 
 ```bash
 .helmsman/tools/checks/migrate-layout.sh
