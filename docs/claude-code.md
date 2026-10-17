@@ -17,6 +17,21 @@ Each generated rule carries a comment naming its source. Edit the `.mdc`, then r
 
 A `CLAUDE.md` that does not import `@AGENTS.md` fails the check. Claude reads `AGENTS.md` only when no `CLAUDE.md` exists, so that file would hide the review-before-ready steps.
 
+## Agent watermark
+
+`.helmsman/tools/watermark/hooks-install.sh` registers one pre-tool hook, `hook.mjs`, in `.claude/settings.json` (`PreToolUse`) and `.cursor/hooks.json` (`preToolUse`). The hook rewrites the tool input. The agent does not have to remember anything. It appends this footer:
+
+`Sent by an agent. Driver: <git user.name> (<email>). Model: <model>. Skills: <skills or none>.`
+
+| Call | What the hook changes |
+| --- | --- |
+| `gh pr` or `gh issue` with `create`, `edit`, `comment`, or `review` | It defines a `gh` shell function in front of the command. The shell expands heredocs and quotes, then `gh.mjs` adds the footer to `--body`, `-b`, `--body=`, or a copy of `--body-file`, and runs the real `gh`. |
+| An MCP send, post, or comment tool on Slack, Jira, Confluence, GitHub, Linear, Teams, or Discord | The first string field among `text`, `body`, `message`, `comment`, `commentBody`, `markdown_text`. File, branch, repo, label, reaction, and upload tools are left alone. |
+
+Cursor puts the model and the user's email in the hook input. Claude Code does not, so the hook reads the model from the last assistant entry in `transcript_path`. Skills come from the transcript: `Skill` calls and `/name` commands in Claude Code, reads of a `SKILL.md` in Cursor. A body that already has the footer is left alone. `HELMSMAN_DRIVER` overrides the driver.
+
+Not covered: `gh api`, `curl` to a webhook, and a `gh pr create --fill` with no body. In Cursor, every `SKILL.md` an agent reads counts as a skill, including one it only edited.
+
 ## Not covered by the emitter
 
 | Cursor | Claude Code |
