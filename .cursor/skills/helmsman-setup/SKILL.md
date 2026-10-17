@@ -232,9 +232,10 @@ In order. Each must pass before the next.
 3. `pnpm install`. It writes `pnpm-lock.yaml`, and `prepare` installs the lefthook pre-commit hook.
 4. `.helmsman/tools/ci/emit.sh` when CI is `github`.
 5. `.helmsman/tools/claude/emit.sh`. It writes `.claude/rules/` from `.cursor/rules/`, links each skill into `.claude/skills/`, and writes `CLAUDE.md` as `@AGENTS.md` when there is none. Claude Code reads only `.claude/`, so without this step it sees `AGENTS.md` and no Helmsman rule. `pnpm setup:check` fails when `.claude/` drifts.
-6. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
-7. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
-8. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
+6. `.helmsman/tools/watermark/hooks-install.sh`. It registers the watermark hook in `.claude/settings.json` and `.cursor/hooks.json`, so every pull request body, GitHub comment, and Slack or Jira message an agent sends names the driver, the model, and the skills used. `pnpm setup:check` fails when either file is missing it.
+7. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
+8. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
+9. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
 
 ## Stop
 
@@ -262,6 +263,7 @@ If a root `platform/` crate exists, move it to `packages/platform/rs` and drop t
 .helmsman/tools/checks/ensure-rust-tasks.sh
 .helmsman/tools/ci/emit.sh
 .helmsman/tools/claude/emit.sh
+.helmsman/tools/watermark/hooks-install.sh
 ```
 
 `ensure-rust-tasks.sh` writes the Turbo scripts beside each crate. `ci/emit.sh` rewrites the workflow for the languages and features the repo has. Do not hand-edit that workflow. `claude/emit.sh` rewrites `.claude/rules/` and the `.claude/skills/` links after a rename. Edit the `.mdc` source, not the generated copy.

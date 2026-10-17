@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "node .helmsman/tools/watermark/hook.mjs",
+        "matcher": "^(Shell|MCP:.*)$",
+        "timeout": 10
+      }
+    ]
+  }
+}
