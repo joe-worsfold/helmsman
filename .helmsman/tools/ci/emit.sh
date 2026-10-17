@@ -152,7 +152,7 @@ trap 'rm -f "$out"' EXIT
 emit() { printf '%s\n' "$1" >> "$out"; }
 
 checkout() {
-  emit "      - uses: actions/checkout@v7"
+  emit "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7"
   if [[ "${1:-}" == "full" ]]; then
     emit "        with:"
     emit "          fetch-depth: 0"
@@ -163,8 +163,8 @@ checkout() {
 # install-before-run check. Its scripts use only bash, git, python3, and gh.
 bare_pnpm="pnpm --config.verify-deps-before-run=false"
 bare_setup() {
-  emit "      - uses: pnpm/action-setup@v6"
-  emit "      - uses: actions/setup-node@v7"
+  emit "      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6"
+  emit "      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7"
   emit "        with:"
   emit "          node-version-file: .nvmrc"
 }
@@ -188,7 +188,7 @@ install_root() {
 }
 
 turbo_cache() {
-  emit "      - uses: actions/cache@v6"
+  emit "      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6"
   emit "        with:"
   emit "          path: .turbo"
   emit '          key: turbo-${{ runner.os }}-${{ hashFiles('"'"'pnpm-lock.yaml'"'"') }}-${{ github.sha }}'
@@ -198,14 +198,14 @@ turbo_cache() {
 }
 
 rust_setup() {
-  emit "      - uses: dtolnay/rust-toolchain@v1"
+  emit "      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1"
   emit "        with:"
   emit "          components: clippy, rustfmt"
-  emit "      - uses: Swatinem/rust-cache@v2.9.2"
+  emit "      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2"
 }
 
 uv_setup() {
-  emit "      - uses: astral-sh/setup-uv@v10.3.0"
+  emit "      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0"
 }
 
 run_pnpm() {
@@ -415,8 +415,8 @@ checkout
 node_setup
 install_root
 if [[ "$rust" -eq 1 ]]; then
-  emit "      - uses: dtolnay/rust-toolchain@v1"
-  emit "      - uses: taiki-e/install-action@v2"
+  emit "      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1"
+  emit "      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2"
   emit "        with:"
   emit "          tool: cargo-audit,cargo-deny"
 fi
