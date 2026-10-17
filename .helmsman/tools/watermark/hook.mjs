@@ -90,7 +90,8 @@ function session() {
     }
     const text = typeof entry.message?.content === "string" ? entry.message.content : "";
     for (const [, name] of text.matchAll(/<command-name>\/([\w:.-]+)<\/command-name>/g)) {
-      if (isSkill(name)) skills.add(name);
+      // A plugin skill runs as /plugin:skill. Built-in commands never contain a colon.
+      if (name.includes(":") || isSkill(name)) skills.add(name);
     }
   }
   return { model: model || "unknown", skills: [...skills] };
