@@ -222,7 +222,8 @@ for src in [] if plugin else sorted(p for p in Path(".cursor/skills").glob("*") 
             continue
         print(f"helmsman: {link} points somewhere else. Left alone.")
         continue
-    if our_copy(link) and not use_links and tree(link) == tree(src):
+    # A matching copy is valid on any checkout, so a team with and without symlinks does not flip it.
+    if our_copy(link) and tree(link) == tree(src):
         continue
     ours = link.is_symlink() or our_copy(link) or link_stub(link, target)
     if link.exists() and not ours:

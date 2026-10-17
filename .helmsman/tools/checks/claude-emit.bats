@@ -186,3 +186,14 @@ teardown() {
   [[ "$output" == *"is the repo's own"* ]]
   grep -qx 'mine' .claude/skills/helmsman-review/SKILL.md
 }
+
+@test "a matching copy from a checkout without symlinks passes where symlinks work" {
+  git config core.symlinks false
+  "$emit"
+  git config core.symlinks true
+  run "$emit" --check
+  [ "$status" -eq 0 ]
+  "$emit"
+  [ ! -L .claude/skills/helmsman-review ]
+  [ -f .claude/skills/helmsman-review/.helmsman-copy ]
+}
