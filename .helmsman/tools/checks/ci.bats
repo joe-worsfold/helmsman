@@ -476,16 +476,20 @@ new_crate() {
   printf '%s\n' '[package]' "name = \"$(basename "$1")\"" 'version = "0.1.0"' 'edition = "2021"' > "$1/Cargo.toml"
 }
 
-@test "the rust unit task runs library tests and not tests/*_int.rs" {
+@test "the rust unit task runs the library, tests/, and doc tests, but not tests/*_int.rs" {
   command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
-  new_crate crate
-  printf '%s\n' 'pub fn two() -> u8 { 2 }' '#[cfg(test)] mod t { #[test] fn two() { assert_eq!(super::two(), 2); } }' > crate/src/lib.rs
-  mkdir -p crate/tests
-  printf '%s\n' '#[test] fn needs_the_stack() { panic!("integration ran in the unit task"); }' > crate/tests/store_int.rs
-  cd crate
+  new_crate calc
+  printf '%s\n' 'pub fn two() -> u8 { 2 }' '#[cfg(test)] mod t { #[test] fn two() { assert_eq!(super::two(), 2); } }' > calc/src/lib.rs
+  mkdir -p calc/tests
+  printf '%s\n' '#[test] fn needs_the_stack() { panic!("integration ran in the unit task"); }' > calc/tests/store_int.rs
+  printf '%s\n' '#[test] fn pure_case() { assert_eq!(calc::two(), 2); }' > calc/tests/pure.rs
+  printf '%s\n' '/// ```' '/// assert_eq!(calc::two(), 2);' '/// ```' 'pub fn doc_two() {}' >> calc/src/lib.rs
+  cd calc
   run "$checks/cargo-package.sh" test
   [ "$status" -eq 0 ]
   [[ "$output" == *"test t::two ... ok"* ]]
+  [[ "$output" == *"test pure_case ... ok"* ]]
+  [[ "$output" == *"Doc-tests calc"* ]]
   [[ "$output" != *"needs_the_stack"* ]]
 }
 
@@ -500,7 +504,7 @@ new_crate() {
   [[ "$output" == *"test t::runs ... ok"* ]]
 }
 
-@test "a crate with no library or binary skips the unit task" {
+@test "a crate with no unit test target skips the unit task" {
   new_crate empty
   cd empty
   run "$checks/cargo-package.sh" test

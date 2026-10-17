@@ -26,20 +26,31 @@ fi
 
 case "$mode" in
   test)
-    # Unit tests only. Each tests/*.rs file is a Cargo integration target, and an
-    # integration test needs the local stack, so it runs from pnpm test:integration.
+    # A tests/*_int.rs file needs the local stack, so it runs from pnpm test:integration.
+    # Every other target, including the rest of tests/ and the doc tests, runs here.
     args=(--manifest-path "$manifest")
+    lib=0
     if [[ -f src/lib.rs ]] || grep -q '^\[lib\]' Cargo.toml; then
       args+=(--lib)
+      lib=1
     fi
     if [[ -f src/main.rs || -d src/bin ]] || grep -q '^\[\[bin\]\]' Cargo.toml; then
       args+=(--bins)
     fi
+    shopt -s nullglob
+    for file in tests/*.rs; do
+      name="$(basename "$file" .rs)"
+      [[ "$name" == *_int ]] || args+=(--test "$name")
+    done
+    shopt -u nullglob
     if [[ ${#args[@]} -eq 2 ]]; then
-      echo "helmsman: no library or binary in $PWD. Unit tests skipped."
+      echo "helmsman: no unit test target in $PWD. Unit tests skipped."
       exit 0
     fi
     cargo test "${args[@]}"
+    if [[ "$lib" -eq 1 ]]; then
+      cargo test --manifest-path "$manifest" --doc
+    fi
     exit 0
     ;;
   format)
