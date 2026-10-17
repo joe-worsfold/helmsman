@@ -442,3 +442,22 @@ EOF
   [[ "$output" == *"audit=true"* ]]
   [[ "$output" == *"guard=true"* ]]
 }
+
+@test "rust jobs install the toolchain the repo pins" {
+  write_setup rust
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  printf '%s\n' '[toolchain]' 'channel = "1.99.0"' 'components = ["clippy"]' > rust-toolchain.toml
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  [ "$(grep -c 'toolchain: 1.99.0' .github/workflows/helmsman.yml)" -eq "$(grep -c 'dtolnay/rust-toolchain' .github/workflows/helmsman.yml)" ]
+  run grep -F 'toolchain: stable' .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
+}
+
+@test "rust jobs fall back to stable with no toolchain file" {
+  write_setup rust
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  grep -q 'toolchain: stable' .github/workflows/helmsman.yml
+}
