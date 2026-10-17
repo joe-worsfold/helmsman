@@ -5,16 +5,23 @@ on:
     branches:
       - main
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  release-please:
-    name: release-please
+  release:
+    name: release
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: write
-      pull-requests: write
     steps:
-      - uses: googleapis/release-please-action@v5
+      - uses: actions/checkout@v7
         with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+          fetch-depth: 0
+          fetch-tags: true
+      - name: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .helmsman/tools/release/release.sh

@@ -2,7 +2,6 @@
   "name": "helmsman",
   "displayName": "Helmsman",
   "description": "Helmsman standards, review, and delivery skills, the always-on rules, and the agent watermark hook.",
-  "version": "0.1.0",
   "author": {
     "name": "Joe Worsfold",
     "url": "https://github.com/joe-worsfold"

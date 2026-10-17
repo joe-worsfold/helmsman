@@ -76,7 +76,7 @@ Run `/helmsman-setup` in the target repo. To move a repo that already has Helmsm
 
 ## Releases
 
-release-please runs on every push to `main`. It keeps one release pull request open with the next version and the changelog, built from the `type(scope): description` commit subjects. Merging that pull request tags the release and writes `CHANGELOG.md`. Three parts version on their own: Helmsman itself (`helmsman-v*`, which also sets the plugin manifests' version), `@helmsman/eslint` (`eslint-v*`), and `@helmsman/knip` (`knip-v*`). A `feat` commit moves the minor version and a `fix` the patch, until 1.0.0.
+Every merge to `main` runs `.helmsman/tools/release/release.sh`. It reads the commit subjects since the last `helmsman-v*` tag. With a squash merge, that subject is the pull request title. `feat` moves the minor version, `fix` and `perf` the patch, and a breaking change (`type!:` or `BREAKING CHANGE`) the major version from 1.0.0 on, the minor before it. Any other type publishes nothing. When a release is due, it tags the merge commit and creates a GitHub release whose notes list the merged pull requests. The changelog is the list of releases. No file in the repository carries the version; the tag does. `release.sh --dry-run` prints the next tag.
 
 ## Older layouts
 
