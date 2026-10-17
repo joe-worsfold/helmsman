@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Turbo runs this inside one Rust package directory.
-# lint is clippy, format is rustfmt, test is cargo test.
+# lint is clippy, format is rustfmt, test is cargo test on the library and binaries.
 set -euo pipefail
 
 mode="${1:-}"
@@ -26,7 +26,31 @@ fi
 
 case "$mode" in
   test)
-    cargo test --manifest-path "$manifest"
+    # A tests/*_int.rs file needs the local stack, so it runs from pnpm test:integration.
+    # Every other target, including the rest of tests/ and the doc tests, runs here.
+    args=(--manifest-path "$manifest")
+    lib=0
+    if [[ -f src/lib.rs ]] || grep -q '^\[lib\]' Cargo.toml; then
+      args+=(--lib)
+      lib=1
+    fi
+    if [[ -f src/main.rs || -d src/bin ]] || grep -q '^\[\[bin\]\]' Cargo.toml; then
+      args+=(--bins)
+    fi
+    shopt -s nullglob
+    for file in tests/*.rs; do
+      name="$(basename "$file" .rs)"
+      [[ "$name" == *_int ]] || args+=(--test "$name")
+    done
+    shopt -u nullglob
+    if [[ ${#args[@]} -eq 2 ]]; then
+      echo "helmsman: no unit test target in $PWD. Unit tests skipped."
+      exit 0
+    fi
+    cargo test "${args[@]}"
+    if [[ "$lib" -eq 1 ]]; then
+      cargo test --manifest-path "$manifest" --doc
+    fi
     exit 0
     ;;
   format)
