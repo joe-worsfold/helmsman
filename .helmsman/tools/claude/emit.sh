@@ -13,24 +13,33 @@
 # A rule or skill folder already in .claude/ without the generated marker is the repo's own. It is left alone.
 #
 # --check fails when .claude/ is not this output. It writes nothing.
+# --context prints the rules for the helmsman plugin's SessionStart hook: the always-on rules in
+# full, and a path list for the file-scoped ones. It reads rules from this script's own checkout and
+# skips any rule the project already has in .claude/rules/.
 set -euo pipefail
 
 mode="write"
 case "${1:-}" in
   "") mode="write" ;;
   --check) mode="check" ;;
+  --context) mode="context" ;;
   -h | --help)
-    echo "helmsman: emit.sh [--check]"
+    echo "helmsman: emit.sh [--check|--context]"
     echo "  .helmsman/tools/claude/emit.sh          write .claude/rules, .claude/skills, and CLAUDE.md"
     exit 0
     ;;
   *)
-    echo "helmsman: emit.sh [--check]" >&2
+    echo "helmsman: emit.sh [--check|--context]" >&2
     exit 2
     ;;
 esac
 
-root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+project="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+if [[ "$mode" == "context" ]]; then
+  root="$(cd "$(dirname "$0")/../../.." && pwd)"
+else
+  root="$project"
+fi
 cd "$root"
 
 if [[ ! -d .cursor/rules && ! -d .cursor/skills ]]; then
@@ -38,7 +47,8 @@ if [[ ! -d .cursor/rules && ! -d .cursor/skills ]]; then
   exit 0
 fi
 
-MODE="$mode" ALWAYS="helmsman-writing" python3 - << 'PY'
+MODE="$mode" PROJECT="$project" ALWAYS="helmsman-writing" python3 - << 'PY'
+import json
 import os
 import re
 import sys
@@ -107,8 +117,37 @@ def put(path, text):
     path.write_text(text, encoding="utf-8")
 
 
+if mode == "context":
+    project_rules = Path(os.environ["PROJECT"]) / ".claude/rules"
+    scoped = []
+    for src in sorted(Path(".cursor/rules").glob("*.mdc")):
+        if (project_rules / f"{src.stem}.md").exists():
+            continue
+        meta, body = frontmatter(src.read_text(encoding="utf-8"))
+        if meta.get("alwaysApply") or src.stem in always:
+            print(f"<!-- helmsman plugin rule: {src.stem} -->\n{body.rstrip()}\n")
+        elif meta.get("globs"):
+            scoped.append(f"- {', '.join(meta['globs'])}: read {src.resolve()}")
+    if scoped:
+        print("# Helmsman file rules\n\nBefore you edit a file matching a pattern below, read that rule.\n")
+        print("\n".join(scoped))
+    sys.exit(0)
+
+
+def plugin_enabled():
+    try:
+        settings = json.loads(Path(".claude/settings.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return settings.get("enabledPlugins", {}).get("helmsman@helmsman") is True
+
+
+# The helmsman plugin ships the rules and skills, so a generated copy would load them twice.
+plugin = plugin_enabled()
+stale = "is a generated copy the helmsman plugin replaces" if plugin else "has no source in .cursor"
+
 expected_rules = set()
-for src in sorted(Path(".cursor/rules").glob("*.mdc")):
+for src in [] if plugin else sorted(Path(".cursor/rules").glob("*.mdc")):
     meta, body = frontmatter(src.read_text(encoding="utf-8"))
     if not (meta.get("alwaysApply") or meta.get("globs") or src.stem in always):
         continue
@@ -119,12 +158,12 @@ for src in sorted(Path(".cursor/rules").glob("*.mdc")):
 for dest in sorted(Path(".claude/rules").glob("*.md")):
     if dest not in expected_rules and not dest.is_symlink() and generated(dest):
         if mode == "check":
-            problems.append(f"{dest} has no source in .cursor/rules")
+            problems.append(f"{dest} {stale}")
         else:
             dest.unlink()
 
 expected_links = set()
-for src in sorted(p for p in Path(".cursor/skills").glob("*") if (p / "SKILL.md").is_file()):
+for src in [] if plugin else sorted(p for p in Path(".cursor/skills").glob("*") if (p / "SKILL.md").is_file()):
     link = Path(".claude/skills") / src.name
     target = Path("../../.cursor/skills") / src.name
     expected_links.add(link)
@@ -149,7 +188,7 @@ if skills_dir.is_dir():
             target = os.readlink(link)
             if target.startswith("../../.cursor/skills/"):
                 if mode == "check":
-                    problems.append(f"{link} has no source in .cursor/skills")
+                    problems.append(f"{link} {stale}")
                 else:
                     link.unlink()
 
