@@ -174,6 +174,19 @@ rust_ready() {
   return 0
 }
 
+# A root [workspace] runs as one cargo command over every member. Turbo's per-package filter
+# misses a crate outside packages/*/rs and apps/api|mcp, and cannot see a path dependency.
+rust_run() {
+  local task="$1"
+  if [[ -f Cargo.toml ]] && grep -q '^\[workspace\]' Cargo.toml; then
+    echo "helmsman: cargo ${task} over the workspace"
+    "$here/cargo-package.sh" "$task"
+    return 0
+  fi
+  package_filters "packages/*/rs" "apps/api" "apps/mcp"
+  run_turbo "$task" ${filters[@]+"${filters[@]}"}
+}
+
 rust_lint() {
   if ! rust_ready; then
     return 0
@@ -181,8 +194,7 @@ rust_lint() {
   if [[ -f "$root/.helmsman/tools/clippy/floor.sh" ]]; then
     "$root/.helmsman/tools/clippy/floor.sh"
   fi
-  package_filters "packages/*/rs" "apps/api" "apps/mcp"
-  run_turbo lint ${filters[@]+"${filters[@]}"}
+  rust_run lint
   if [[ -f "$root/.helmsman/tools/clippy/check-file-length.sh" ]]; then
     "$root/.helmsman/tools/clippy/check-file-length.sh"
   fi
@@ -192,16 +204,14 @@ rust_format() {
   if ! rust_ready; then
     return 0
   fi
-  package_filters "packages/*/rs" "apps/api" "apps/mcp"
-  run_turbo format ${filters[@]+"${filters[@]}"}
+  rust_run format
 }
 
 rust_test() {
   if ! rust_ready; then
     return 0
   fi
-  package_filters "packages/*/rs" "apps/api" "apps/mcp"
-  run_turbo test ${filters[@]+"${filters[@]}"}
+  rust_run test
 }
 
 python_task() {
