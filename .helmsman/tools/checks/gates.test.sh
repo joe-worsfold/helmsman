@@ -266,7 +266,10 @@ echo "python: uv missing fails"
 new_repo
 printf '%s\n' '[project]' 'name = "gate"' 'version = "0.0.0"' > "$tmp/pyproject.toml"
 track
-expect_exit 1 "$root/.helmsman/tools/python/check.sh" >/dev/null
+no_uv="$tmp/no-uv-bin"
+mkdir "$no_uv"
+for tool in bash git dirname; do ln -s "$(command -v "$tool")" "$no_uv/$tool"; done
+expect_exit 1 env PATH="$no_uv" "$root/.helmsman/tools/python/check.sh" >/dev/null
 
 echo "ci paths: unknown range runs both"
 new_repo
