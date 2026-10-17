@@ -96,3 +96,14 @@ fake_release() {
   [ "$(head -n 1 .helmsman/setup.md)" = "Helmsman: $before" ]
   rm -rf "$fake"
 }
+
+@test "a Helmsman line the source does not have stops the fork merge with a reason" {
+  fake_source
+  "$update" --from "$fake"
+  sed -i.bak "s/^Helmsman:.*/Helmsman: $(printf 'a%.0s' {1..40})/" .helmsman/setup.md && rm -f .helmsman/setup.md.bak
+  printf '%s\n' 'Local forks: .helmsman/tools/checks/forked.txt' >> .helmsman/setup.md
+  run "$update" --from "$fake"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"could not read Helmsman"* ]]
+  rm -rf "$fake"
+}

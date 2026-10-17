@@ -74,10 +74,13 @@ main() {
       return 1
     fi
     mkdir -p "$old" "$merged"
-    if [[ -n "$from" ]]; then
+    if ! { if [[ -n "$from" ]]; then
       git -C "$src" archive "$old_sha" | tar -x -C "$old"
     else
       curl -fsSL "https://codeload.github.com/${repo}/tar.gz/${old_sha}" | tar -xz --strip-components=1 -C "$old"
+    fi; } 2>/dev/null; then
+      echo "helmsman: could not read Helmsman ${old_sha}, the release on the Helmsman: line, so the local forks cannot merge." >&2
+      return 1
     fi
     for fork in "${forks[@]}"; do
       fork="$(printf '%s' "$fork" | xargs)"
