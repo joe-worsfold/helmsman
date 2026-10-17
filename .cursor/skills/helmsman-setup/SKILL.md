@@ -207,7 +207,10 @@ Fix: <yes|no>
 Upstream PR: no
 Correct PR: no
 Review model: none
+Review pass model: none
 ```
+
+`Review pass model` is the model the main review pass runs on. `none` means the session's model. `Review model` is the different-family model for the second pass.
 
 `Surfaces` stays `none` until an app exists. The change that adds `apps/web` sets `Surfaces`, `E2E smoke`, and `Watch` to its Playwright commands. The change that adds `apps/mobile` does the same for Maestro. The change that adds the first SurrealDB schema sets `Integration`.
 
