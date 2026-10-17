@@ -470,3 +470,19 @@ EOF
   [ "$status" -eq 0 ]
   grep -q 'toolchain: 1.98.1' .github/workflows/helmsman.yml
 }
+
+@test "a prettier config or ignore change runs the TypeScript jobs" {
+  printf '%s\n' '# docs' > README.md
+  git add -A
+  git commit -q -m base
+  for file in prettier.config.mjs .prettierrc .prettierrc.json .prettierignore web/.prettierrc.yaml; do
+    base="$(git rev-parse HEAD)"
+    mkdir -p "$(dirname "$file")"
+    printf '%s\n' '{}' > "$file"
+    git add -A
+    git commit -q -m "$file"
+    run env HELMSMAN_CI_BASE="$base" "$checks/ci-paths.sh"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"ts=true"* ]] || { echo "ts not set for $file"; return 1; }
+  done
+}
