@@ -62,7 +62,7 @@ Each Rust crate directory (`packages/*/rs`, including `packages/platform/rs`, an
 | Vitest | `pnpm test`, filter `ts` | test (vitest) | `pnpm test` | Package unit tests | |
 | Clippy | `pnpm lint`, filter `rust`, glob `*.rs` | lint (clippy) | `pnpm lint` | Rust lint, file length, the Clippy floor | |
 | rustfmt | `pnpm format:check`, filter `rust` | format (rustfmt) | `pnpm format:check` | Rust format | |
-| cargo test | `pnpm test`, filter `rust` | test (unit) | `pnpm test` | Rust unit tests | `--affected` does not rebuild every dependent of a shared crate. A root `Cargo.toml`, `Cargo.lock`, or `rust-toolchain.toml` sets the `rust` path flag so the job runs; Turbo still selects affected packages. |
+| cargo test | `pnpm test`, filter `rust` | test (unit) | `pnpm test` | Rust unit tests: `cargo test --lib --bins`. Each `tests/*.rs` file is a Cargo integration target and runs from `pnpm test:integration` | `--affected` does not rebuild every dependent of a shared crate. A root `Cargo.toml`, `Cargo.lock`, or `rust-toolchain.toml` sets the `rust` path flag so the job runs; Turbo still selects affected packages. |
 | Ruff | `pnpm lint`, filter `python` | lint (ruff) | `pnpm lint` | Lint and Ruff format | `pnpm format:check` runs Ruff only when `HELMSMAN_FILTER=python`. The CI format job for Python is the lint job. |
 | ty | `pnpm typecheck`, filter `python` | typecheck (ty) | `pnpm typecheck` | Python types | Skips when the project does not name ty. |
 | pytest | `pnpm test`, filter `python` | test (pytest) | `pnpm test` | Python unit tests | |

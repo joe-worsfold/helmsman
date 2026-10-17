@@ -499,3 +499,40 @@ EOF
     [[ "$output" == *"ts=true"* ]] || { echo "ts not set for $file"; return 1; }
   done
 }
+
+new_crate() {
+  mkdir -p "$1/src"
+  printf '%s\n' '[package]' "name = \"$(basename "$1")\"" 'version = "0.1.0"' 'edition = "2021"' > "$1/Cargo.toml"
+}
+
+@test "the rust unit task runs library tests and not tests/*_int.rs" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  new_crate crate
+  printf '%s\n' 'pub fn two() -> u8 { 2 }' '#[cfg(test)] mod t { #[test] fn two() { assert_eq!(super::two(), 2); } }' > crate/src/lib.rs
+  mkdir -p crate/tests
+  printf '%s\n' '#[test] fn needs_the_stack() { panic!("integration ran in the unit task"); }' > crate/tests/store_int.rs
+  cd crate
+  run "$checks/cargo-package.sh" test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"test t::two ... ok"* ]]
+  [[ "$output" != *"needs_the_stack"* ]]
+}
+
+@test "the rust unit task runs a src/bin binary's tests" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  new_crate tool
+  mkdir -p tool/src/bin
+  printf '%s\n' 'fn main() {}' '#[cfg(test)] mod t { #[test] fn runs() {} }' > tool/src/bin/tool.rs
+  cd tool
+  run "$checks/cargo-package.sh" test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"test t::runs ... ok"* ]]
+}
+
+@test "a crate with no library or binary skips the unit task" {
+  new_crate empty
+  cd empty
+  run "$checks/cargo-package.sh" test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Unit tests skipped"* ]]
+}
