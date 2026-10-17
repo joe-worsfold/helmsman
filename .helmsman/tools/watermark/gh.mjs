@@ -10,8 +10,12 @@ import { fileURLToPath } from "node:url";
 
 export const MARK = "Sent by an agent.";
 
+export function hasFooter(body) {
+  return body.trimEnd().split("\n").at(-1).startsWith(MARK);
+}
+
 export function withFooter(body, footer) {
-  if (!footer || body.includes(MARK)) return body;
+  if (!footer || hasFooter(body)) return body;
   return `${body.trimEnd()}\n\n${footer}`;
 }
 

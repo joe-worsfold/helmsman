@@ -10,7 +10,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MARK, withFooter } from "./gh.mjs";
+import { hasFooter, MARK, withFooter } from "./gh.mjs";
 
 const GH_WRITE = /\bgh\s+(pr|issue)\s+(create|edit|comment|review)\b/;
 const MESSAGING = /slack|jira|atlassian|confluence|github|linear|teams|discord/i;
@@ -98,7 +98,7 @@ function rewrite(name, input) {
     return null;
   }
   const fields = typeof input === "string" ? JSON.parse(input) : input;
-  const field = BODY_FIELDS.find((f) => typeof fields?.[f] === "string" && !fields[f].includes(MARK));
+  const field = BODY_FIELDS.find((f) => typeof fields?.[f] === "string" && !hasFooter(fields[f]));
   if (!field) return null;
   const updated = { ...fields, [field]: withFooter(fields[field], footer()) };
   return typeof input === "string" ? JSON.stringify(updated) : updated;

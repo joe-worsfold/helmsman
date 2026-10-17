@@ -10,6 +10,11 @@ test("the footer goes after a blank line, once", () => {
   assert.equal(withFooter(`hi\n\n${footer}`, footer), `hi\n\n${footer}`);
 });
 
+test("a body that quotes the footer mid-text still gets one", () => {
+  const body = `It appends \`${MARK} Driver: ...\` to the message.\n\nMore text.`;
+  assert.equal(withFooter(body, footer), `${body}\n\n${footer}`);
+});
+
 test("no footer leaves the body alone", () => {
   assert.equal(withFooter("hi", ""), "hi");
 });
