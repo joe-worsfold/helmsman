@@ -234,11 +234,12 @@ In order. Each must pass before the next.
 2. The installed `node -v` and `pnpm -v` match the pins. `.helmsman/tools/checks/toolchain-latest.sh` fails otherwise. If they do not match, say which and stop. Installing a tool version on the machine is the user's call.
 3. `pnpm install`. It writes `pnpm-lock.yaml`, and `prepare` installs the lefthook pre-commit hook.
 4. `.helmsman/tools/ci/emit.sh` when CI is `github`.
-5. `.helmsman/tools/claude/emit.sh`. It writes `.claude/rules/` from `.cursor/rules/`, links each skill into `.claude/skills/`, and writes `CLAUDE.md` as `@AGENTS.md` when there is none. Claude Code reads only `.claude/`, so without this step it sees `AGENTS.md` and no Helmsman rule. `pnpm setup:check` fails when `.claude/` drifts.
-6. `.helmsman/tools/watermark/hooks-install.sh`. It registers the watermark hook in `.claude/settings.json` and `.cursor/hooks.json`, so every pull request body, GitHub comment, and Slack or Jira message an agent sends names the driver, the model, and the skills used. `pnpm setup:check` fails when either file is missing it.
-7. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
-8. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
-9. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
+5. `.helmsman/tools/plugin/enable.sh <Helmsman sha>`, with the same sha as the `Helmsman:` setup line. It pins the helmsman Claude Code plugin in `.claude/settings.json`. The plugin carries the skills, the always-on rules, and the watermark hook, so a teammate gets them after accepting the folder's trust prompt. Skip this step to keep the copied `.claude/` files instead.
+6. `.helmsman/tools/claude/emit.sh`. With the plugin enabled, it removes its generated copies and only writes `CLAUDE.md`. Without it, it writes `.claude/rules/` from `.cursor/rules/`, links each skill into `.claude/skills/`, and writes `CLAUDE.md` as `@AGENTS.md` when there is none. Claude Code reads only `.claude/`, so without this step it sees `AGENTS.md` and no Helmsman rule. `pnpm setup:check` fails when `.claude/` drifts.
+7. `.helmsman/tools/watermark/hooks-install.sh`. It registers the watermark hook in `.cursor/hooks.json`, and in `.claude/settings.json` when the plugin is not enabled, so every pull request body, GitHub comment, and Slack or Jira message an agent sends names the driver, the model, and the skills used. `pnpm setup:check` fails when a file is missing it.
+8. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
+9. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
+10. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
 
 ## Stop
 
@@ -265,10 +266,11 @@ If a root `platform/` crate exists, move it to `packages/platform/rs` and drop t
 ```bash
 .helmsman/tools/checks/ensure-rust-tasks.sh
 .helmsman/tools/ci/emit.sh
+.helmsman/tools/plugin/enable.sh <Helmsman sha>
 .helmsman/tools/claude/emit.sh
 .helmsman/tools/watermark/hooks-install.sh
 ```
 
-`ensure-rust-tasks.sh` writes the Turbo scripts beside each crate. `ci/emit.sh` rewrites the workflow for the languages and features the repo has. Do not hand-edit that workflow. `claude/emit.sh` rewrites `.claude/rules/` and the `.claude/skills/` links after a rename. Edit the `.mdc` source, not the generated copy.
+Skip `plugin/enable.sh` in a repo that keeps the copied `.claude/` files. `ensure-rust-tasks.sh` writes the Turbo scripts beside each crate. `ci/emit.sh` rewrites the workflow for the languages and features the repo has. Do not hand-edit that workflow. `claude/emit.sh` rewrites `.claude/rules/` and the `.claude/skills/` links after a rename. Edit the `.mdc` source, not the generated copy.
 
 If the repo has `.node-version` and no `.nvmrc`, write `.nvmrc` with the same version and delete `.node-version`. Point its Helmsman workflow at `node-version-file: .nvmrc`. Do not change an existing `.nvmrc`. Upstream changes reach that repo only after they have landed here and you re-setup. `helmsman-upstream` does not run there: the pin is not in the tree.

@@ -17,6 +17,20 @@ Each generated rule carries a comment naming its source. Edit the `.mdc`, then r
 
 A `CLAUDE.md` that does not import `@AGENTS.md` fails the check. Claude reads `AGENTS.md` only when no `CLAUDE.md` exists, so that file would hide the review-before-ready steps.
 
+## Plugin
+
+This repository is also a Claude Code plugin (`.claude-plugin/plugin.json`) and a Cursor plugin (`.cursor-plugin/plugin.json`). A repo can load Helmsman from the plugin instead of copying `.claude/` files.
+
+| Part | Claude Code plugin | Cursor plugin |
+| --- | --- | --- |
+| Skills | `.cursor/skills/`, named `helmsman:<skill>` | `.cursor/skills/` |
+| Always-on rules | A `SessionStart` hook runs `emit.sh --context`. It prints each always-on rule, and a list of the file rules with the path to read before editing a match. A rule the repo already has in `.claude/rules/` is skipped | `.cursor/rules/`, with their own `alwaysApply` and `globs` |
+| Watermark | `PreToolUse` hook | `preToolUse` hook in `.cursor-plugin/hooks.json` |
+
+`.helmsman/tools/plugin/enable.sh <sha>` pins the Claude Code plugin in a repo's `.claude/settings.json`. It writes an inline catalog (`extraKnownMarketplaces`, source type `settings`) whose one entry fetches `joe-worsfold/helmsman` at that sha, and sets `enabledPlugins["helmsman@helmsman"]`. A teammate gets the plugin after accepting the folder's trust prompt. With the plugin enabled, `emit.sh` removes its generated copies, so nothing loads twice, and `hooks-install.sh` leaves the Claude hook to the plugin.
+
+Cursor has no committed file that turns a plugin on. Teams and Enterprise plans can set it to Required in a team marketplace. Other plans install it per person, so setup keeps copying `.cursor/` for Cursor.
+
 ## Agent watermark
 
 `.helmsman/tools/watermark/hooks-install.sh` registers one pre-tool hook, `hook.mjs`, in `.claude/settings.json` (`PreToolUse`) and `.cursor/hooks.json` (`preToolUse`). The hook rewrites the tool input. The agent does not have to remember anything. It puts this quoted line first in the message, so the message text stays the most visible part:

@@ -55,8 +55,11 @@ def save(path, data):
 
 claude_path = Path(".claude/settings.json")
 claude = load(claude_path)
-pre = claude.setdefault("hooks", {}).setdefault("PreToolUse", [])
-if not any(script in h.get("command", "") for b in pre for h in b.get("hooks", [])):
+# The helmsman plugin carries this hook, so a repo that enables it needs no project copy.
+plugin = claude.get("enabledPlugins", {}).get("helmsman@helmsman") is True
+pre = claude.get("hooks", {}).get("PreToolUse", [])
+if not plugin and not any(script in h.get("command", "") for b in pre for h in b.get("hooks", [])):
+    pre = claude.setdefault("hooks", {}).setdefault("PreToolUse", [])
     if mode == "check":
         problems.append(f"{claude_path} has no watermark hook")
     else:

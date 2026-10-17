@@ -115,3 +115,33 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"not emitted"* ]]
 }
+
+@test "context prints the always rules in full and lists the file rules" {
+  run env CLAUDE_PROJECT_DIR="$repo" "$emit" --context
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"<!-- helmsman plugin rule: helmsman-standards -->"* ]]
+  [[ "$output" == *"<!-- helmsman plugin rule: helmsman-writing -->"* ]]
+  [[ "$output" == *"helmsman-rust.mdc"* ]]
+  [[ "$output" != *"helmsman-checklist"* ]]
+  [ ! -e .claude ]
+}
+
+@test "context skips a rule the project already emitted" {
+  "$emit"
+  run env CLAUDE_PROJECT_DIR="$repo" "$emit" --context
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"helmsman plugin rule: helmsman-standards"* ]]
+}
+
+@test "an enabled helmsman plugin removes the generated copies" {
+  "$emit"
+  printf '%s\n' '{"enabledPlugins":{"helmsman@helmsman":true}}' > .claude/settings.json
+  run "$emit" --check
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"the helmsman plugin replaces"* ]]
+  "$emit"
+  [ ! -e .claude/rules/helmsman-standards.md ]
+  [ ! -L .claude/skills/helmsman-review ]
+  run "$emit" --check
+  [ "$status" -eq 0 ]
+}

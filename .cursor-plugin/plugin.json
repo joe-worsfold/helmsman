@@ -1,0 +1,11 @@
+{
+  "name": "helmsman",
+  "description": "Helmsman standards, review, and delivery skills and rules, and the agent watermark hook.",
+  "author": { "name": "Joe Worsfold", "url": "https://github.com/joe-worsfold" },
+  "homepage": "https://github.com/joe-worsfold/helmsman",
+  "repository": "https://github.com/joe-worsfold/helmsman",
+  "license": "MIT",
+  "rules": "./.cursor/rules/",
+  "skills": "./.cursor/skills/",
+  "hooks": "./.cursor-plugin/hooks.json"
+}
