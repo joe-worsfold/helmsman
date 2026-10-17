@@ -72,7 +72,15 @@ The job map, the path gates, and the minute estimate are [docs/guardrails.md](do
 
 ## Set it up in a repo
 
-Run `/helmsman-setup` in the target repo. For a repo that already has Helmsman, copy `.helmsman/tools/` again (no `node_modules/`, no `upstream/`), then from the target root run:
+Run `/helmsman-setup` in the target repo. To move a repo that already has Helmsman to a release, run `.helmsman/tools/update.sh` (the latest `helmsman-v*` release) or `.helmsman/tools/update.sh helmsman-v0.2.0`. It copies that release's files, moves the `Helmsman:` setup line and the plugin pin to its commit, and re-runs the emitters. `--dry-run` prints the file changes first.
+
+## Releases
+
+release-please runs on every push to `main`. It keeps one release pull request open with the next version and the changelog, built from the `type(scope): description` commit subjects. Merging that pull request tags the release and writes `CHANGELOG.md`. Three parts version on their own: Helmsman itself (`helmsman-v*`, which also sets the plugin manifests' version), `@helmsman/eslint` (`eslint-v*`), and `@helmsman/knip` (`knip-v*`). A `feat` commit moves the minor version and a `fix` the patch, until 1.0.0.
+
+## Older layouts
+
+For a repo on a layout from before `update.sh`, copy `.helmsman/tools/` again (no `node_modules/`, no `upstream/`), then from the target root run:
 
 ```bash
 .helmsman/tools/checks/migrate-layout.sh
