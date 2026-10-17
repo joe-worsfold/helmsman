@@ -69,7 +69,8 @@ function session() {
     if (!cursor && entry.type === "assistant" && entry.message?.model) model = entry.message.model;
     for (const use of toolUses(entry)) {
       if (use.name === "Skill" && use.input?.skill) skills.add(use.input.skill);
-      const read = use.name === "Read" && JSON.stringify(use.input ?? {}).match(/skills\/([\w.-]+)\/SKILL\.md/);
+      // Cursor loads a skill by reading its SKILL.md. Claude Code loads one only through the Skill tool.
+      const read = cursor && use.name === "Read" && JSON.stringify(use.input ?? {}).match(/skills\/([\w.-]+)\/SKILL\.md/);
       if (read) skills.add(read[1]);
     }
     const text = typeof entry.message?.content === "string" ? entry.message.content : "";
