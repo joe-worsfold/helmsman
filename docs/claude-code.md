@@ -13,6 +13,8 @@ Helmsman's rules and skills are written once, under `.cursor/`. Claude Code read
 | `.cursor/skills/<name>/` | `.claude/skills/<name>`, a relative symlink | The skill's own `description` and `disable-model-invocation` |
 | `AGENTS.md` | `CLAUDE.md` containing `@AGENTS.md`, only when no `CLAUDE.md` exists | Every session |
 
+On a checkout without symlinks (`git config core.symlinks false`, the Windows default), each skill is a copied folder with a `.helmsman-copy` marker instead of a link, and `--check` fails when a copy no longer matches its source. A link that was checked out as a text file is replaced by a copy.
+
 Each generated rule carries a comment naming its source. Edit the `.mdc`, then run the emitter. A file or folder in `.claude/` without that comment, or a symlink that points elsewhere, is the repo's own and is left alone.
 
 A `CLAUDE.md` that does not import `@AGENTS.md` fails the check. Claude reads `AGENTS.md` only when no `CLAUDE.md` exists, so that file would hide the review-before-ready steps.

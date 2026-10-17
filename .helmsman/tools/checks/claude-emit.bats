@@ -145,3 +145,44 @@ teardown() {
   run "$emit" --check
   [ "$status" -eq 0 ]
 }
+
+@test "without symlinks a skill is a marked copy, and check sees a stale copy" {
+  git config core.symlinks false
+  run "$emit"
+  [ "$status" -eq 0 ]
+  [ -d .claude/skills/helmsman-review ]
+  [ ! -L .claude/skills/helmsman-review ]
+  [ -f .claude/skills/helmsman-review/SKILL.md ]
+  [ -f .claude/skills/helmsman-review/.helmsman-copy ]
+  run "$emit" --check
+  [ "$status" -eq 0 ]
+  printf '%s\n' 'More.' >> .cursor/skills/helmsman-review/SKILL.md
+  run "$emit" --check
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"is not what emit.sh writes"* ]]
+  "$emit"
+  grep -q 'More.' .claude/skills/helmsman-review/SKILL.md
+  before="$(find .claude -type f -exec shasum {} + | sort | shasum)"
+  "$emit"
+  after="$(find .claude -type f -exec shasum {} + | sort | shasum)"
+  [ "$before" = "$after" ]
+}
+
+@test "a link checked out as a text file is replaced by a copy" {
+  git config core.symlinks false
+  mkdir -p .claude/skills
+  printf '%s' '../../.cursor/skills/helmsman-review' > .claude/skills/helmsman-review
+  run "$emit"
+  [ "$status" -eq 0 ]
+  [ -f .claude/skills/helmsman-review/SKILL.md ]
+}
+
+@test "a repo's own skill folder without the copy mark is left alone" {
+  git config core.symlinks false
+  mkdir -p .claude/skills/helmsman-review
+  printf '%s\n' 'mine' > .claude/skills/helmsman-review/SKILL.md
+  run "$emit"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"is the repo's own"* ]]
+  grep -qx 'mine' .claude/skills/helmsman-review/SKILL.md
+}
