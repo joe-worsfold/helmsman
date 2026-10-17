@@ -113,6 +113,13 @@ while IFS= read -r file; do
       ts=true
       ;;
   esac
+  # Prettier's config and ignore file change what the TypeScript format job checks.
+  case "$base" in
+    .prettierrc | .prettierrc.* | prettier.config.* | .prettierignore)
+      ts=true
+      setup=true
+      ;;
+  esac
   case "$file" in
     .helmsman/* | eval/*) continue ;;
   esac
