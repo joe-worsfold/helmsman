@@ -50,3 +50,49 @@ teardown() {
   after="$(find . -path ./.git -prune -o -type f -print0 | sort -z | xargs -0 shasum | shasum)"
   [ "$before" = "$after" ]
 }
+
+fake_source() {
+  fake="$(mktemp -d)"
+  rsync -a --exclude node_modules --exclude upstream "$src/.helmsman/tools/" "$fake/.helmsman/tools/"
+  mkdir -p "$fake/.github"
+  cp "$src/lefthook.yml" "$fake/lefthook.yml"
+  cp "$src/.github/PULL_REQUEST_TEMPLATE.md" "$fake/.github/PULL_REQUEST_TEMPLATE.md"
+  printf '%s\n' 'one' 'two' 'three' 'four' 'five' 'six' > "$fake/.helmsman/tools/checks/forked.txt"
+  git -C "$fake" init -q
+  git -C "$fake" -c user.email=t@example.com -c user.name=t add -A
+  git -C "$fake" -c user.email=t@example.com -c user.name=t commit -q -m base
+}
+
+fake_release() {
+  sed -i.bak "s/^$1\$/$2/" "$fake/.helmsman/tools/checks/forked.txt" && rm -f "$fake/.helmsman/tools/checks/forked.txt.bak"
+  git -C "$fake" -c user.email=t@example.com -c user.name=t commit -qam next
+}
+
+@test "a local fork keeps the repo's lines and takes the release's lines" {
+  fake_source
+  "$update" --from "$fake"
+  sed -i.bak 's/^two$/two (repo)/' .helmsman/tools/checks/forked.txt && rm -f .helmsman/tools/checks/forked.txt.bak
+  printf '%s\n' 'Local forks: .helmsman/tools/checks/forked.txt' >> .helmsman/setup.md
+  fake_release five "five (release)"
+  run "$update" --from "$fake"
+  [ "$status" -eq 0 ]
+  grep -qx 'two (repo)' .helmsman/tools/checks/forked.txt
+  grep -qx 'five (release)' .helmsman/tools/checks/forked.txt
+  [ "$(head -n 1 .helmsman/setup.md)" = "Helmsman: $(git -C "$fake" rev-parse HEAD)" ]
+  rm -rf "$fake"
+}
+
+@test "a conflicting local fork stops the update and changes nothing" {
+  fake_source
+  "$update" --from "$fake"
+  before="$(git -C "$fake" rev-parse HEAD)"
+  sed -i.bak 's/^three$/three (repo)/' .helmsman/tools/checks/forked.txt && rm -f .helmsman/tools/checks/forked.txt.bak
+  printf '%s\n' 'Local forks: .helmsman/tools/checks/forked.txt' >> .helmsman/setup.md
+  fake_release three "three (release)"
+  run "$update" --from "$fake"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"conflicts with the local fork .helmsman/tools/checks/forked.txt"* ]]
+  grep -qx 'three (repo)' .helmsman/tools/checks/forked.txt
+  [ "$(head -n 1 .helmsman/setup.md)" = "Helmsman: $before" ]
+  rm -rf "$fake"
+}

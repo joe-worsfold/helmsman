@@ -72,7 +72,7 @@ The job map, the path gates, and the minute estimate are [docs/guardrails.md](do
 
 ## Set it up in a repo
 
-Run `/helmsman-setup` in the target repo. To move a repo that already has Helmsman to a release, run `.helmsman/tools/update.sh` (the latest `helmsman-v*` release) or `.helmsman/tools/update.sh helmsman-v0.2.0`. It copies that release's files, moves the `Helmsman:` setup line and the plugin pin to its commit, and re-runs the emitters. `--dry-run` prints the file changes first.
+Run `/helmsman-setup` in the target repo. To move a repo that already has Helmsman to a release, run `.helmsman/tools/update.sh` (the latest `helmsman-v*` release) or `.helmsman/tools/update.sh helmsman-v0.2.0`. It copies that release's files, moves the `Helmsman:` setup line and the plugin pin to its commit, and re-runs the emitters. A file on the `Local forks:` setup line is three-way merged instead of replaced, and a conflict stops the update before anything is written. `--dry-run` prints the file changes first.
 
 ## Releases
 

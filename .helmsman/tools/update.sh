@@ -9,6 +9,9 @@
 # Copies the setup Copy list: the helmsman-* rules, skills, and automations under .cursor/,
 # .helmsman/tools/ (without node_modules/ and upstream/), lefthook.yml, and the PR template.
 # A rule, skill, or automation without the helmsman- prefix is the repo's own and is left alone.
+# A Helmsman file the repo changed on purpose goes on a `Local forks:` setup line (comma-separated
+# paths). Each is three-way merged: the repo's copy, the release named on the `Helmsman:` line, and
+# the new release. Any conflict stops the update before a file is written, and names the file.
 # Then it writes the commit to the `Helmsman:` setup line, re-pins the plugin when this repo
 # enabled it, and re-runs the workflow, Claude, and watermark emitters from the new copy.
 main() {
@@ -59,6 +62,48 @@ main() {
   fi
   echo "helmsman: updating to ${ref:-$from} (${sha})."
 
+  local forks=() fork merged="$work/merged" old="$work/old" conflicts=()
+  if [[ -f .helmsman/setup.md ]]; then
+    IFS=',' read -r -a forks <<< "$(sed -n 's/^Local forks: *//p' .helmsman/setup.md | head -n 1)"
+  fi
+  if [[ ${#forks[@]} -gt 0 && "${forks[0]// /}" != "none" ]]; then
+    local old_sha
+    old_sha="$(sed -n 's/^Helmsman: *//p' .helmsman/setup.md | head -n 1)"
+    if [[ ! "$old_sha" =~ ^[0-9a-f]{40}$ ]]; then
+      echo "helmsman: Local forks need the Helmsman: line of the release this repo is on now, to merge from." >&2
+      return 1
+    fi
+    mkdir -p "$old" "$merged"
+    if [[ -n "$from" ]]; then
+      git -C "$src" archive "$old_sha" | tar -x -C "$old"
+    else
+      curl -fsSL "https://codeload.github.com/${repo}/tar.gz/${old_sha}" | tar -xz --strip-components=1 -C "$old"
+    fi
+    for fork in "${forks[@]}"; do
+      fork="$(printf '%s' "$fork" | xargs)"
+      [[ -f "$fork" ]] || { echo "helmsman: Local forks names ${fork}, which is not in this repo." >&2; return 1; }
+      mkdir -p "$merged/$(dirname "$fork")"
+      if [[ ! -f "$src/$fork" ]]; then
+        echo "helmsman: ${fork} is gone from this release. The repo's copy stays."
+        cp "$fork" "$merged/$fork"
+        continue
+      fi
+      [[ -f "$old/$fork" ]] || : > "$old/$fork"
+      if git merge-file -p "$fork" "$old/$fork" "$src/$fork" > "$merged/$fork"; then
+        echo "  fork: ${fork} merges cleanly."
+      else
+        conflicts+=("$fork")
+      fi
+    done
+    if [[ ${#conflicts[@]} -gt 0 ]]; then
+      printf 'helmsman: this release conflicts with the local fork %s.\n' "${conflicts[@]}" >&2
+      echo "helmsman: nothing was changed. Merge those by hand, or take them off the Local forks line." >&2
+      return 1
+    fi
+  else
+    forks=()
+  fi
+
   if [[ "$dry" -eq 1 ]]; then
     rsync -ain --delete --exclude node_modules --exclude upstream "$src/.helmsman/tools/" .helmsman/tools/ | sed 's/^/  tools: /'
     local kind
@@ -90,6 +135,9 @@ main() {
   cp "$src/lefthook.yml" lefthook.yml
   mkdir -p .github
   cp "$src/.github/PULL_REQUEST_TEMPLATE.md" .github/PULL_REQUEST_TEMPLATE.md
+  for fork in ${forks[@]+"${forks[@]}"}; do
+    cp "$merged/$(printf '%s' "$fork" | xargs)" "$(printf '%s' "$fork" | xargs)"
+  done
 
   if [[ -f .helmsman/setup.md ]] && grep -q '^Helmsman:' .helmsman/setup.md; then
     sed -i.bak "s/^Helmsman:.*/Helmsman: ${sha}/" .helmsman/setup.md && rm -f .helmsman/setup.md.bak
