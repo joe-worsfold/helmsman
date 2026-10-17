@@ -201,7 +201,7 @@ turbo_cache() {
 rust_channel() {
   local channel=""
   if [[ -f rust-toolchain.toml ]]; then
-    channel="$(sed -n 's/^channel *= *"\([^"]*\)".*$/\1/p' rust-toolchain.toml | head -n 1)"
+    channel="$(sed -n "s/^channel *= *[\"']\([^\"']*\)[\"'].*$/\1/p" rust-toolchain.toml | head -n 1)"
   elif [[ -f rust-toolchain ]]; then
     channel="$(head -n 1 rust-toolchain | tr -d '[:space:]')"
   fi

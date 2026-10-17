@@ -461,3 +461,12 @@ EOF
   [ "$status" -eq 0 ]
   grep -q 'toolchain: stable' .github/workflows/helmsman.yml
 }
+
+@test "a single-quoted toolchain channel is read too" {
+  write_setup rust
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  printf '%s\n' '[toolchain]' "channel = '1.98.1'" > rust-toolchain.toml
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  grep -q 'toolchain: 1.98.1' .github/workflows/helmsman.yml
+}
