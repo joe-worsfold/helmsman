@@ -483,3 +483,34 @@ new_crate() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"Unit tests skipped"* ]]
 }
+
+@test "a cargo workspace runs unit tests for every member, apps/server included" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  printf '%s\n' '[workspace]' 'resolver = "2"' 'members = ["apps/server", "packages/ledger/rs"]' > Cargo.toml
+  new_crate apps/server
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn server_runs() {} }' > apps/server/src/lib.rs
+  mkdir -p apps/server/tests
+  printf '%s\n' '#[test] fn needs_the_stack() { panic!("integration ran"); }' > apps/server/tests/db_int.rs
+  new_crate packages/ledger/rs
+  sed -i.bak 's/name = "rs"/name = "ledger"/' packages/ledger/rs/Cargo.toml && rm -f packages/ledger/rs/Cargo.toml.bak
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn ledger_runs() {} }' > packages/ledger/rs/src/lib.rs
+  "$checks/ensure-rust-tasks.sh" >/dev/null
+  run "$checks/task.sh" rust test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"cargo test over the workspace"* ]]
+  [[ "$output" == *"test t::server_runs ... ok"* ]]
+  [[ "$output" == *"test t::ledger_runs ... ok"* ]]
+  [[ "$output" != *"needs_the_stack"* ]]
+}
+
+@test "a failing member test fails the workspace unit task" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  printf '%s\n' '[workspace]' 'resolver = "2"' 'members = ["apps/server", "apps/worker"]' > Cargo.toml
+  new_crate apps/server
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn breaks() { panic!("broken"); } }' > apps/server/src/lib.rs
+  new_crate apps/worker
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn fine() {} }' > apps/worker/src/lib.rs
+  "$checks/ensure-rust-tasks.sh" >/dev/null
+  run "$checks/task.sh" rust test
+  [ "$status" -ne 0 ]
+}
