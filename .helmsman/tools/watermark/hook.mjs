@@ -94,8 +94,10 @@ function rewrite(name, input) {
     const prefix = `export HELMSMAN_WATERMARK=${quote(footer())}; gh() { node ${quote(wrapper)} "$@"; }; `;
     return { ...input, command: prefix + input.command };
   }
+  // Cursor's matcher passes only Shell and MCP tools, and its docs do not say whether tool_name keeps the MCP: prefix.
+  const mcp = cursor ? name !== "Shell" : name.startsWith("mcp__");
   const server = `${name} ${event.mcp_server_name ?? ""}`;
-  if (!/^(mcp__|MCP:)/.test(name) || !MESSAGING.test(server) || !SENDS.test(name) || NOT_A_MESSAGE.test(name)) {
+  if (!mcp || !MESSAGING.test(server) || !SENDS.test(name) || NOT_A_MESSAGE.test(name)) {
     return null;
   }
   const fields = typeof input === "string" ? JSON.parse(input) : input;
