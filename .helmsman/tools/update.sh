@@ -61,6 +61,13 @@ main() {
 
   if [[ "$dry" -eq 1 ]]; then
     rsync -ain --delete --exclude node_modules --exclude upstream "$src/.helmsman/tools/" .helmsman/tools/ | sed 's/^/  tools: /'
+    local kind
+    for kind in rules skills automations; do
+      rsync -ain --delete --include 'helmsman-*' --include 'helmsman-*/**' --exclude '*' \
+        "$src/.cursor/${kind}/" ".cursor/${kind}/" 2>/dev/null | sed "s#^#  .cursor/${kind}: #"
+    done
+    cmp -s "$src/lefthook.yml" lefthook.yml || echo "  replace: lefthook.yml"
+    cmp -s "$src/.github/PULL_REQUEST_TEMPLATE.md" .github/PULL_REQUEST_TEMPLATE.md || echo "  replace: .github/PULL_REQUEST_TEMPLATE.md"
     echo "  pin: Helmsman: ${sha}"
     return 0
   fi
