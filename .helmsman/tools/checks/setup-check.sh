@@ -3,6 +3,8 @@
 # The setup keys stay `E2E smoke` and `Watch`.
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/setup-field.sh"
+
 file="${1:-.helmsman/setup.md}"
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
@@ -18,21 +20,14 @@ if [[ ! -f "$file" ]]; then
   exit 1
 fi
 
-field() {
-  local key="$1"
-  awk -F': ' -v key="$key" 'tolower($1) == key { sub(/^[^:]*: /, ""); print; exit }' "$file"
-}
-
-lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
-
-languages="$(field "languages")"
-surfaces="$(field "surfaces")"
-smoke="$(field "e2e smoke")"
-watch="$(field "watch")"
-issues="$(field "issues")"
-ci="$(field "ci")"
-file_issues="$(field "file issues")"
-fix="$(field "fix")"
+languages="$(field "languages" "$file")"
+surfaces="$(field "surfaces" "$file")"
+smoke="$(field "e2e smoke" "$file")"
+watch="$(field "watch" "$file")"
+issues="$(field "issues" "$file")"
+ci="$(field "ci" "$file")"
+file_issues="$(field "file issues" "$file")"
+fix="$(field "fix" "$file")"
 
 missing=()
 [[ -n "$languages" ]] || missing+=("Languages")
@@ -59,8 +54,8 @@ if [[ "$(lower "$fix")" != "yes" && "$(lower "$fix")" != "no" ]]; then
   exit 1
 fi
 
-ci_integration="$(field "ci integration")"
-ci_smoke="$(field "ci e2e smoke")"
+ci_integration="$(field "ci integration" "$file")"
+ci_smoke="$(field "ci e2e smoke" "$file")"
 if [[ -n "$ci_integration" && "$(lower "$ci_integration")" != "yes" && "$(lower "$ci_integration")" != "no" ]]; then
   echo "helmsman: CI integration must be yes or no." >&2
   exit 1

@@ -5,6 +5,8 @@
 # --stdout prints the workflow and writes nothing.
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../checks" && pwd)/setup-field.sh"
+
 mode="write"
 case "${1:-}" in
   "") mode="write" ;;
@@ -18,16 +20,6 @@ esac
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$root"
-
-lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
-
-field() {
-  local key="$1"
-  if [[ ! -f .helmsman/setup.md ]]; then
-    return 0
-  fi
-  awk -F': ' -v key="$key" 'tolower($1) == key { sub(/^[^:]*: /, ""); print; exit }' .helmsman/setup.md
-}
 
 ci="$(field "ci")"
 if [[ -n "$ci" && "$(lower "$ci")" != "github" ]]; then
