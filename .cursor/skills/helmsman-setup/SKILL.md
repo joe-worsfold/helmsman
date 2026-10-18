@@ -216,6 +216,8 @@ Review pass model: none
 
 `CI integration` and `CI e2e smoke` only control whether the workflow emits those jobs. A missing line means no. `Integration` and `E2E smoke` stay the local commands. Re-setup writes each key as `yes` when that local command is not `none`, and `no` when it is `none`, so a repo that already emits the job keeps it. When you set `E2E smoke` or `Integration` to a command that should fail the pull request, set the matching CI key to `yes`.
 
+`Local forks` is optional: a comma-separated list of Helmsman files this repo changed on purpose, such as `Local forks: .helmsman/tools/checks/task.sh, lefthook.yml`. `update.sh` three-way merges each one instead of replacing it, from the release on the `Helmsman:` line to the new one, and stops before writing anything when one conflicts. A fork that is a general fix belongs upstream as an issue, so the list stays short.
+
 `Repo checks` is the repo's own fast offline checks, such as a test-name or schema-ownership lint. `pnpm test` and `pnpm setup:check` run it, so CI and the pre-commit hook do too. When the line is set, the CI setup job installs root dependencies first, so a repo check may call a pinned dev dependency such as `bats`. Re-setup keeps the line. A repo check goes here, not into a forked Helmsman script.
 
 ## Review before ready
