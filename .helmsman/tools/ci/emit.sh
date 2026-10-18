@@ -197,9 +197,21 @@ turbo_cache() {
   emit '            turbo-${{ runner.os }}-'
 }
 
+# dtolnay/rust-toolchain installs only the toolchain input it is given, so pass the repo's pin.
+rust_channel() {
+  local channel=""
+  if [[ -f rust-toolchain.toml ]]; then
+    channel="$(sed -n "s/^channel *= *[\"']\([^\"']*\)[\"'].*$/\1/p" rust-toolchain.toml | head -n 1)"
+  elif [[ -f rust-toolchain ]]; then
+    channel="$(head -n 1 rust-toolchain | tr -d '[:space:]')"
+  fi
+  printf '%s\n' "${channel:-stable}"
+}
+
 rust_setup() {
   emit "      - uses: dtolnay/rust-toolchain@v1"
   emit "        with:"
+  emit "          toolchain: $(rust_channel)"
   emit "          components: clippy, rustfmt"
   emit "      - uses: Swatinem/rust-cache@v2.9.2"
 }
@@ -416,6 +428,8 @@ node_setup
 install_root
 if [[ "$rust" -eq 1 ]]; then
   emit "      - uses: dtolnay/rust-toolchain@v1"
+  emit "        with:"
+  emit "          toolchain: $(rust_channel)"
   emit "      - uses: taiki-e/install-action@v2"
   emit "        with:"
   emit "          tool: cargo-audit,cargo-deny"
