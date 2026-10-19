@@ -5,6 +5,8 @@
 # --stdout prints the workflow and writes nothing.
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../checks" && pwd)/setup-field.sh"
+
 mode="write"
 case "${1:-}" in
   "") mode="write" ;;
@@ -18,16 +20,6 @@ esac
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$root"
-
-lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
-
-field() {
-  local key="$1"
-  if [[ ! -f .helmsman/setup.md ]]; then
-    return 0
-  fi
-  awk -F': ' -v key="$key" 'tolower($1) == key { sub(/^[^:]*: /, ""); print; exit }' .helmsman/setup.md
-}
 
 ci="$(field "ci")"
 if [[ -n "$ci" && "$(lower "$ci")" != "github" ]]; then
@@ -161,7 +153,7 @@ trap 'rm -f "$out"' EXIT
 emit() { printf '%s\n' "$1" >> "$out"; }
 
 checkout() {
-  emit "      - uses: actions/checkout@v7"
+  emit "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7"
   if [[ "${1:-}" == "full" ]]; then
     emit "        with:"
     emit "          fetch-depth: 0"
@@ -172,8 +164,8 @@ checkout() {
 # install-before-run check. Its scripts use only bash, git, python3, and gh.
 bare_pnpm="pnpm --config.verify-deps-before-run=false"
 bare_setup() {
-  emit "      - uses: pnpm/action-setup@v6"
-  emit "      - uses: actions/setup-node@v7"
+  emit "      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6"
+  emit "      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7"
   emit "        with:"
   emit "          node-version-file: .nvmrc"
 }
@@ -197,7 +189,7 @@ install_root() {
 }
 
 turbo_cache() {
-  emit "      - uses: actions/cache@v6"
+  emit "      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6"
   emit "        with:"
   emit "          path: .turbo"
   emit '          key: turbo-${{ runner.os }}-${{ hashFiles('"'"'pnpm-lock.yaml'"'"') }}-${{ github.sha }}'
@@ -206,15 +198,27 @@ turbo_cache() {
   emit '            turbo-${{ runner.os }}-'
 }
 
+# dtolnay/rust-toolchain installs only the toolchain input it is given, so pass the repo's pin.
+rust_channel() {
+  local channel=""
+  if [[ -f rust-toolchain.toml ]]; then
+    channel="$(sed -n "s/^channel *= *[\"']\([^\"']*\)[\"'].*$/\1/p" rust-toolchain.toml | head -n 1)"
+  elif [[ -f rust-toolchain ]]; then
+    channel="$(head -n 1 rust-toolchain | tr -d '[:space:]')"
+  fi
+  printf '%s\n' "${channel:-stable}"
+}
+
 rust_setup() {
-  emit "      - uses: dtolnay/rust-toolchain@v1"
+  emit "      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1"
   emit "        with:"
+  emit "          toolchain: $(rust_channel)"
   emit "          components: clippy, rustfmt"
-  emit "      - uses: Swatinem/rust-cache@v2.9.2"
+  emit "      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2"
 }
 
 uv_setup() {
-  emit "      - uses: astral-sh/setup-uv@v10.3.0"
+  emit "      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0"
 }
 
 run_pnpm() {
@@ -449,8 +453,10 @@ if [[ "$ci_extended" -eq 1 ]]; then
   node_setup
   install_root
   if [[ "$rust" -eq 1 ]]; then
-    emit "      - uses: dtolnay/rust-toolchain@v1"
-    emit "      - uses: taiki-e/install-action@v2"
+    emit "      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1"
+    emit "        with:"
+    emit "          toolchain: $(rust_channel)"
+    emit "      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2"
     emit "        with:"
     emit "          tool: cargo-audit,cargo-deny"
   fi

@@ -442,3 +442,132 @@ EOF
   [[ "$output" == *"audit=true"* ]]
   [[ "$output" == *"guard=true"* ]]
 }
+
+@test "rust jobs install the toolchain the repo pins" {
+  write_setup rust
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  printf '%s\n' '[toolchain]' 'channel = "1.99.0"' 'components = ["clippy"]' > rust-toolchain.toml
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  [ "$(grep -c 'toolchain: 1.99.0' .github/workflows/helmsman.yml)" -eq "$(grep -c 'dtolnay/rust-toolchain' .github/workflows/helmsman.yml)" ]
+  run grep -F 'toolchain: stable' .github/workflows/helmsman.yml
+  [ "$status" -eq 1 ]
+}
+
+@test "rust jobs fall back to stable with no toolchain file" {
+  write_setup rust
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  grep -q 'toolchain: stable' .github/workflows/helmsman.yml
+}
+
+@test "a single-quoted toolchain channel is read too" {
+  write_setup rust
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  printf '%s\n' '[toolchain]' "channel = '1.98.1'" > rust-toolchain.toml
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  grep -q 'toolchain: 1.98.1' .github/workflows/helmsman.yml
+}
+
+@test "every emitted action is pinned to a commit with its ref in a comment" {
+  write_setup "rust, python"
+  printf '%s\n' '[workspace]' 'members = []' > Cargo.toml
+  printf '%s\n' '[project]' 'name = "demo"' > pyproject.toml
+  mkdir -p apps/web
+  run "$checks/../ci/emit.sh"
+  [ "$status" -eq 0 ]
+  run grep -E 'uses: ' .github/workflows/helmsman.yml
+  [ "$status" -eq 0 ]
+  run bash -c "grep -E 'uses: ' .github/workflows/helmsman.yml | grep -vE '@[0-9a-f]{40} # [A-Za-z0-9.-]+$'"
+  [ "$status" -eq 1 ]
+}
+
+@test "a prettier config or ignore change runs the TypeScript jobs" {
+  printf '%s\n' '# docs' > README.md
+  git add -A
+  git commit -q -m base
+  for file in prettier.config.mjs .prettierrc .prettierrc.json .prettierignore web/.prettierrc.yaml; do
+    base="$(git rev-parse HEAD)"
+    mkdir -p "$(dirname "$file")"
+    printf '%s\n' '{}' > "$file"
+    git add -A
+    git commit -q -m "$file"
+    run env HELMSMAN_CI_BASE="$base" "$checks/ci-paths.sh"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"ts=true"* ]] || { echo "ts not set for $file"; return 1; }
+  done
+}
+
+new_crate() {
+  mkdir -p "$1/src"
+  printf '%s\n' '[package]' "name = \"$(basename "$1")\"" 'version = "0.1.0"' 'edition = "2021"' > "$1/Cargo.toml"
+}
+
+@test "the rust unit task runs the library, tests/, and doc tests, but not tests/*_int.rs" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  new_crate calc
+  printf '%s\n' 'pub fn two() -> u8 { 2 }' '#[cfg(test)] mod t { #[test] fn two() { assert_eq!(super::two(), 2); } }' > calc/src/lib.rs
+  mkdir -p calc/tests
+  printf '%s\n' '#[test] fn needs_the_stack() { panic!("integration ran in the unit task"); }' > calc/tests/store_int.rs
+  printf '%s\n' '#[test] fn pure_case() { assert_eq!(calc::two(), 2); }' > calc/tests/pure.rs
+  printf '%s\n' '/// ```' '/// assert_eq!(calc::two(), 2);' '/// ```' 'pub fn doc_two() {}' >> calc/src/lib.rs
+  cd calc
+  run "$checks/cargo-package.sh" test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"test t::two ... ok"* ]]
+  [[ "$output" == *"test pure_case ... ok"* ]]
+  [[ "$output" == *"Doc-tests calc"* ]]
+  [[ "$output" != *"needs_the_stack"* ]]
+}
+
+@test "the rust unit task runs a src/bin binary's tests" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  new_crate tool
+  mkdir -p tool/src/bin
+  printf '%s\n' 'fn main() {}' '#[cfg(test)] mod t { #[test] fn runs() {} }' > tool/src/bin/tool.rs
+  cd tool
+  run "$checks/cargo-package.sh" test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"test t::runs ... ok"* ]]
+}
+
+@test "a crate with no unit test target skips the unit task" {
+  new_crate empty
+  cd empty
+  run "$checks/cargo-package.sh" test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Unit tests skipped"* ]]
+}
+
+@test "a cargo workspace runs unit tests for every member, apps/server included" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  printf '%s\n' '[workspace]' 'resolver = "2"' 'members = ["apps/server", "packages/ledger/rs"]' > Cargo.toml
+  new_crate apps/server
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn server_runs() {} }' > apps/server/src/lib.rs
+  mkdir -p apps/server/tests
+  printf '%s\n' '#[test] fn needs_the_stack() { panic!("integration ran"); }' > apps/server/tests/db_int.rs
+  new_crate packages/ledger/rs
+  sed -i.bak 's/name = "rs"/name = "ledger"/' packages/ledger/rs/Cargo.toml && rm -f packages/ledger/rs/Cargo.toml.bak
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn ledger_runs() {} }' > packages/ledger/rs/src/lib.rs
+  "$checks/ensure-rust-tasks.sh" >/dev/null
+  run "$checks/task.sh" rust test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"cargo test over the workspace"* ]]
+  [[ "$output" == *"test t::server_runs ... ok"* ]]
+  [[ "$output" == *"test t::ledger_runs ... ok"* ]]
+  [[ "$output" != *"needs_the_stack"* ]]
+}
+
+@test "a failing member test fails the workspace unit task" {
+  command -v cargo >/dev/null 2>&1 || skip "cargo is not installed"
+  printf '%s\n' '[workspace]' 'resolver = "2"' 'members = ["apps/server", "apps/worker"]' > Cargo.toml
+  new_crate apps/server
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn breaks() { panic!("broken"); } }' > apps/server/src/lib.rs
+  new_crate apps/worker
+  printf '%s\n' '#[cfg(test)] mod t { #[test] fn fine() {} }' > apps/worker/src/lib.rs
+  "$checks/ensure-rust-tasks.sh" >/dev/null
+  run "$checks/task.sh" rust test
+  [ "$status" -ne 0 ]
+}

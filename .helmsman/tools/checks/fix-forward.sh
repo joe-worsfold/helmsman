@@ -5,6 +5,8 @@
 # shortcut: 200 open fix-forward issues, raise the limit when a repo holds more
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/setup-field.sh"
+
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$root"
 
@@ -68,10 +70,6 @@ if [[ ! -f "$setup" ]]; then
   echo "helmsman: fix-forward skipped (no setup file)."
   exit 0
 fi
-
-field() {
-  awk -F': ' -v key="$1" 'tolower($1) == key { sub(/^[^:]*: /, ""); print; exit }' "$setup"
-}
 
 issues="$(field "issues" | tr '[:upper:]' '[:lower:]')"
 file_issues="$(field "file issues" | tr '[:upper:]' '[:lower:]')"

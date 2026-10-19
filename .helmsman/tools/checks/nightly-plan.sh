@@ -3,6 +3,8 @@
 # Does not open a pull request.
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/setup-field.sh"
+
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$root"
 
@@ -11,10 +13,6 @@ if [[ ! -f "$setup" ]]; then
   echo "helmsman: nightly fix is off (no setup file)."
   exit 0
 fi
-
-field() {
-  awk -F': ' -v key="$1" 'tolower($1) == key { sub(/^[^:]*: /, ""); print; exit }' "$setup"
-}
 
 nightly="$(field "nightly fix" | tr '[:upper:]' '[:lower:]')"
 if [[ "$nightly" != "yes" ]]; then
