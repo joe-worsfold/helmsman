@@ -96,6 +96,15 @@ if [[ "$ts_pkg" -eq 1 || "$vitest" -eq 1 ]]; then
   test_vitest=1
 fi
 
+# CI suite: short omits prove-web, audit, eslint-package, and knip-package.
+# Use short for early-stage repos and POCs where those checks slow iteration.
+# A public repo with free minutes can leave this unset (default: extended).
+ci_suite="$(lower "$(field "ci suite")")"
+ci_extended=1
+if [[ "$ci_suite" == "short" ]]; then
+  ci_extended=0
+fi
+
 # CI integration and CI e2e smoke default to no when the line is missing.
 # Integration and E2E smoke stay the local commands. They do not emit jobs.
 integration=0
@@ -347,15 +356,29 @@ emit "        run: ${bare_pnpm} ci:paths"
 emit ""
 job_ids+=(changes)
 
-if [[ "$lint_eslint" -eq 1 ]]; then
-  pnpm_job lint-eslint "lint (eslint)" "needs.changes.outputs.ts == 'true'" 15 lint ts yes node
-fi
-if [[ "$format_prettier" -eq 1 ]]; then
-  pnpm_job format-prettier "format (prettier)" "needs.changes.outputs.ts == 'true'" 15 format:check ts yes node
-fi
+# Merge lint, format, typecheck, and test into one job when ts_pkg is set.
+# One pnpm install and one Turbo cache instead of four. Steps run sequentially;
+# a lint failure stops early, which is acceptable.
 if [[ "$ts_pkg" -eq 1 ]]; then
-  pnpm_job typecheck-tsc "typecheck (tsc)" "needs.changes.outputs.ts == 'true'" 15 typecheck ts yes node
+  begin_job check-ts "check (ts)" "needs.changes.outputs.ts == 'true'" 20
+  checkout full
+  node_setup
+  install_root
+  turbo_cache
+  [[ "$lint_eslint" -eq 1 ]] && run_pnpm lint ts yes
+  [[ "$format_prettier" -eq 1 ]] && run_pnpm "format:check" ts yes
+  run_pnpm typecheck ts yes
+  [[ "$test_vitest" -eq 1 ]] && run_pnpm test ts yes
+  [[ "$knip" -eq 1 ]] && run_pnpm unused "" no
+  emit ""
 elif [[ "$harness_ts" -eq 1 || "$root_ts" -eq 1 ]]; then
+  # No package-level TS: emit separate jobs for harness/root edge cases.
+  if [[ "$lint_eslint" -eq 1 ]]; then
+    pnpm_job lint-eslint "lint (eslint)" "needs.changes.outputs.ts == 'true'" 15 lint ts yes node
+  fi
+  if [[ "$format_prettier" -eq 1 ]]; then
+    pnpm_job format-prettier "format (prettier)" "needs.changes.outputs.ts == 'true'" 15 "format:check" ts yes node
+  fi
   if [[ "$python" -eq 1 && "$harness_ts" -eq 1 ]]; then
     pnpm_job typecheck-tsc "typecheck (tsc)" "needs.changes.outputs.ts == 'true'" 15 typecheck harness no node
   elif [[ "$python" -eq 1 && "$root_ts" -eq 1 ]]; then
@@ -363,20 +386,30 @@ elif [[ "$harness_ts" -eq 1 || "$root_ts" -eq 1 ]]; then
   else
     pnpm_job typecheck-tsc "typecheck (tsc)" "needs.changes.outputs.ts == 'true'" 15 typecheck "" no node
   fi
+  if [[ "$test_vitest" -eq 1 ]]; then
+    pnpm_job test-vitest "test (vitest)" "needs.changes.outputs.ts == 'true'" 15 test ts yes node
+  fi
+  if [[ "$knip" -eq 1 ]]; then
+    pnpm_job unused-knip "unused (knip)" "needs.changes.outputs.ts == 'true'" 15 unused "" no node
+  fi
 fi
 if [[ "$harness_ts" -eq 1 && "$ts_pkg" -eq 1 ]]; then
   pnpm_job typecheck-harness "typecheck (harness)" "needs.changes.outputs.ts == 'true' && needs.changes.outputs.harness == 'true'" 15 typecheck harness no node
 fi
-if [[ "$knip" -eq 1 ]]; then
-  pnpm_job unused-knip "unused (knip)" "needs.changes.outputs.ts == 'true'" 15 unused "" no node
-fi
-if [[ "$test_vitest" -eq 1 ]]; then
-  pnpm_job test-vitest "test (vitest)" "needs.changes.outputs.ts == 'true'" 15 test ts yes node
-fi
+
+# Merge lint, format, and test into one job when rust is set.
+# One Rust toolchain install and one pnpm install instead of three.
 if [[ "$rust" -eq 1 ]]; then
-  pnpm_job lint-clippy "lint (clippy)" "needs.changes.outputs.rust == 'true'" 20 lint rust yes rust
-  pnpm_job format-rustfmt "format (rustfmt)" "needs.changes.outputs.rust == 'true'" 15 format:check rust yes rust
-  pnpm_job test-unit "test (unit)" "needs.changes.outputs.rust == 'true'" 20 test rust yes rust
+  begin_job check-rust "check (rust)" "needs.changes.outputs.rust == 'true'" 25
+  checkout full
+  node_setup
+  install_root
+  rust_setup
+  turbo_cache
+  run_pnpm lint rust yes
+  run_pnpm "format:check" rust yes
+  run_pnpm test rust yes
+  emit ""
 fi
 if [[ "$python" -eq 1 ]]; then
   pnpm_job lint-ruff "lint (ruff)" "needs.changes.outputs.python == 'true'" 15 lint python no python
@@ -400,7 +433,7 @@ fi
 if [[ "$smoke" -eq 1 ]]; then
   pnpm_job e2e-smoke "e2e smoke" "needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'" 20 e2e:smoke "" no node
 fi
-if [[ -d apps/web ]]; then
+if [[ "$ci_extended" -eq 1 && -d apps/web ]]; then
   begin_job prove-web "prove (web)" "needs.changes.outputs.web == 'true'" 5
   checkout full
   bare_setup
@@ -414,20 +447,22 @@ if [[ "$harness_test" -eq 1 ]]; then
   pnpm_job test-harness "test (harness)" "needs.changes.outputs.harness == 'true'" 20 test harness no node
 fi
 
-begin_job audit audit "needs.changes.outputs.audit == 'true'" 15
-checkout
-node_setup
-install_root
-if [[ "$rust" -eq 1 ]]; then
-  emit "      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1"
-  emit "        with:"
-  emit "          toolchain: $(rust_channel)"
-  emit "      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2"
-  emit "        with:"
-  emit "          tool: cargo-audit,cargo-deny"
+if [[ "$ci_extended" -eq 1 ]]; then
+  begin_job audit audit "needs.changes.outputs.audit == 'true'" 15
+  checkout
+  node_setup
+  install_root
+  if [[ "$rust" -eq 1 ]]; then
+    emit "      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1"
+    emit "        with:"
+    emit "          toolchain: $(rust_channel)"
+    emit "      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2"
+    emit "        with:"
+    emit "          tool: cargo-audit,cargo-deny"
+  fi
+  run_pnpm audit:all
+  emit ""
 fi
-run_pnpm audit:all
-emit ""
 
 # Repo checks may call a root dev dependency, so the setup job installs then.
 setup_kind=bare
@@ -450,7 +485,7 @@ emit '          HELMSMAN_DIFF_RANGE: "${{ github.event_name == '"'"'pull_request
 emit "        run: ${bare_pnpm} plain:language"
 emit ""
 
-if [[ "$eslint_pkg" -eq 1 ]]; then
+if [[ "$ci_extended" -eq 1 && "$eslint_pkg" -eq 1 ]]; then
   begin_job eslint-package eslint-package "needs.changes.outputs.eslint == 'true'" 15
   checkout
   node_setup .helmsman/tools/eslint/pnpm-lock.yaml
@@ -460,7 +495,7 @@ if [[ "$eslint_pkg" -eq 1 ]]; then
   run_pnpm eslint:package
   emit ""
 fi
-if [[ "$knip_pkg" -eq 1 ]]; then
+if [[ "$ci_extended" -eq 1 && "$knip_pkg" -eq 1 ]]; then
   begin_job knip-package knip-package "needs.changes.outputs.knip == 'true'" 15
   checkout
   node_setup .helmsman/tools/knip/pnpm-lock.yaml
