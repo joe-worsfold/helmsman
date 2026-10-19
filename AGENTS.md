@@ -4,7 +4,7 @@ This repository is the Helmsman harness. It is not a STAR product and it has no 
 
 ## Review before ready
 
-Every agent PR finishes in order: (1) run helmsman-review on the full diff against base, (2) fix every Blocker, unjustified Judo, High, and Medium finding, (3) prove it locally with the pre-commit hook and `pnpm check`, (4) post the review as a pull request comment saying what was fixed and what remains Fix forward or Nit and why, (5) mark ready only after that comment. Marking ready is when CI runs. Do not merge until that run is green. The review catches what the standards missed, including when the change was written to them.
+Every agent PR finishes in order: (1) run helmsman-review on the full diff against base, (2) fix every Blocker, unjustified Judo, High, and Medium finding, (3) prove it locally with the pre-commit hook and `pnpm check`, (4) post the review as a pull request comment that covers: what was fixed, what remains as Fix forward or Nit and why, and a confirmation that `pnpm check` and the pre-commit hook both passed locally — paste the passing summary line from each, (5) mark ready only after that comment. Marking ready is when CI runs. Do not merge until that run is green. The review catches what the standards missed, including when the change was written to them.
 
 Agents work in draft. Prove the change locally with `pnpm check` and the pre-commit hook before pushing. CI runs when the pull request is marked ready, and on push to main. A draft pull request does not run CI.
 
