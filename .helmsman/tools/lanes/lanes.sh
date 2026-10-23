@@ -21,6 +21,9 @@
 # A lane is a linked worktree that is not on main or master, in any repo directly
 # under a root. The lane size is the largest active lane that has installed or
 # built anything (node_modules/ or target/). Lanes = budget / lane size.
+# measure only raises the lane size. A sweep that deletes idle build folders
+# would otherwise shrink it and raise the cap past what built lanes need.
+# budget measures afresh.
 set -euo pipefail
 
 file="${HELMSMAN_LANES_FILE:-$HOME/.config/helmsman/lanes}"
@@ -76,8 +79,9 @@ Measured: $(date '+%Y-%m-%d %H:%M')"
 }
 
 # Takes the budget and roots from the file, or from budget() before it writes them.
+# budget() passes fresh=1 so the old lane size is dropped.
 measure() {
-  local budget="${1:-}" roots="${2:-}" size_kb=0 kb line path size lanes
+  local budget="${1:-}" roots="${2:-}" fresh="${3:-0}" size_kb=0 kb line path size lanes prev
   budget="${budget:-$(field 'Disk budget' | tr -dc '0-9')}"
   roots="${roots:-$(field Roots)}"
   if [[ -z "$budget" || -z "$roots" ]]; then
@@ -96,6 +100,8 @@ measure() {
     size="$(field 'Lane size' | tr -dc '0-9')"
     size="${size:-$default_size_gb}"
   fi
+  prev="$(field 'Lane size' | tr -dc '0-9')"
+  if (( ! fresh )) && [[ -n "$prev" ]] && (( prev > size )); then size=$prev; fi
   lanes=$(( budget / size ))
   if (( lanes < 1 )); then lanes=1; fi
   write_file "$budget" "$roots" "$size" "$lanes"
@@ -129,7 +135,7 @@ budget() {
       exit 2
     }
   fi
-  measure "$gb" "$roots"
+  measure "$gb" "$roots" 1
 }
 
 status() {
