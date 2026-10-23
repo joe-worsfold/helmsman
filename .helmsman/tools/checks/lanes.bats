@@ -40,6 +40,17 @@ teardown() {
   grep -q '^Lanes: 30$' "$HELMSMAN_LANES_FILE"
 }
 
+@test "measure keeps the larger lane size after build folders are deleted" {
+  "$lanes" budget 30 "$root"
+  sed -i.bak 's/^Lane size: .*/Lane size: 15G/' "$HELMSMAN_LANES_FILE"
+  mkdir -p "$root/app-one/target"
+  "$lanes" measure
+  grep -q '^Lane size: 15G$' "$HELMSMAN_LANES_FILE"
+  grep -q '^Lanes: 2$' "$HELMSMAN_LANES_FILE"
+  "$lanes" budget 30 "$root"
+  grep -q '^Lane size: 1G$' "$HELMSMAN_LANES_FILE"
+}
+
 @test "dry run writes nothing" {
   run "$lanes" budget 30 "$root" --dry-run
   [ "$status" -eq 0 ]
