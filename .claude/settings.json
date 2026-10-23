@@ -10,6 +10,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "^(Bash|Agent|EnterWorktree)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.helmsman/tools/lanes/lanes.sh hook",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

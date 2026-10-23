@@ -6,7 +6,7 @@
 #
 # The pin is an inline catalog (marketplace source type "settings") whose one entry fetches
 # joe-worsfold/helmsman at that sha, so every teammate's Claude Code loads the same commit.
-# The plugin carries the watermark hook, so the project-level copy of that hook is removed.
+# The plugin carries the watermark and lane cap hooks, so the project-level copies are removed.
 # Other settings are kept. Running it again with the same sha changes nothing.
 set -euo pipefail
 
@@ -66,7 +66,7 @@ data.setdefault("enabledPlugins", {})["helmsman@helmsman"] = True
 
 pre = data.get("hooks", {}).get("PreToolUse", [])
 for block in pre:
-    block["hooks"] = [h for h in block.get("hooks", []) if "watermark/hook.mjs" not in h.get("command", "")]
+    block["hooks"] = [h for h in block.get("hooks", []) if not any(s in h.get("command", "") for s in ("watermark/hook.mjs", "lanes/lanes.sh"))]
 pre[:] = [b for b in pre if b.get("hooks")]
 if "hooks" in data and not pre:
     data["hooks"].pop("PreToolUse", None)
