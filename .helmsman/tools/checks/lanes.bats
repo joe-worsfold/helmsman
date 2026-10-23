@@ -75,6 +75,8 @@ teardown() {
   [ -z "$output" ]
   run bash -c "printf '%s' '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"echo run git worktree add later\"}}' | '$lanes' hook"
   [ -z "$output" ]
+  run bash -c "printf '%s' '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"gh pr comment 1 --body \\\"run \`git worktree add\` later\\\"\"}}' | '$lanes' hook"
+  [ -z "$output" ]
   run bash -c "printf '%s' '{\"tool_name\":\"Agent\",\"tool_input\":{\"prompt\":\"look at the worktree\"}}' | '$lanes' hook"
   [ -z "$output" ]
   run bash -c "printf '%s' '{\"tool_name\":\"Agent\",\"tool_input\":{\"isolation\":\"worktree\"}}' | '$lanes' hook"

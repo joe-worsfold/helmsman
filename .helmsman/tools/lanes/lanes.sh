@@ -158,10 +158,10 @@ import json, re, sys
 d = json.load(sys.stdin)
 tool, args = d.get("tool_name"), d.get("tool_input") or {}
 client = "cursor" if "cursor_version" in d else "claude"
-# Git where it starts a command (after a separator, a quote, or env assignments), with any
-# global options, so text that only mentions the words is not a worktree.
+# Git where it starts a command (after a separator, env assignments, or sh -c and a quote),
+# with any global options. Prose that mentions the words, quoted or not, is not a worktree.
 git_add = re.compile(
-    r"(^|[;&|(\n\"\x27`]|\$\()\s*(\w+=\S*\s+)*git(\s+-[Cc]\s+\S+|\s+--[\w-]+(=\S+)?)*\s+worktree\s+add\b"
+    r"(^|[;&|(\n]|\$\(|\b(ba|z)?sh\s+-c\s+[\"\x27])\s*(\w+=\S*\s+)*git(\s+-[Cc]\s+\S+|\s+--[\w-]+(=\S+)?)*\s+worktree\s+add\b"
 )
 if tool in ("Bash", "Shell"):
     creates = bool(git_add.search(args.get("command", "")))
