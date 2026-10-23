@@ -152,7 +152,9 @@ import json, re, sys
 d = json.load(sys.stdin)
 tool, args = d.get("tool_name"), d.get("tool_input") or {}
 if tool == "Bash":
-    print("yes" if re.search(r"git(\s+-C\s+\S+)?\s+worktree\s+add\b", args.get("command", "")) else "")
+    # Only where git starts a command, so text that mentions the words is not a worktree.
+    pattern = r"(^|[;&|(\n]|\$\()\s*git(\s+-C\s+\S+)?\s+worktree\s+add\b"
+    print("yes" if re.search(pattern, args.get("command", "")) else "")
 elif tool == "Agent":
     print("yes" if args.get("isolation") == "worktree" else "")
 elif tool == "EnterWorktree":
