@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# plugin/enable.sh pins the helmsman Claude Code plugin, and hooks-install.sh leaves the Claude hook to it.
+# plugin/enable.sh pins the helmsman Claude Code plugin, and hooks-install.sh leaves the Claude hooks to it.
 
 setup() {
   repo="$(mktemp -d)"
@@ -44,4 +44,30 @@ teardown() {
   grep -F -q 'watermark/hook.mjs' .cursor/hooks.json
   run "$tools/watermark/hooks-install.sh" --check
   [ "$status" -eq 0 ]
+}
+
+@test "enable drops the project lane cap hook" {
+  mkdir -p .claude
+  printf '%s\n' '{"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"bash .helmsman/tools/lanes/lanes.sh hook"}]}]}}' > .claude/settings.json
+  run "$tools/plugin/enable.sh" "$sha"
+  [ "$status" -eq 0 ]
+  ! grep -F -q 'lanes/lanes.sh' .claude/settings.json
+}
+
+@test "without the plugin, hooks-install registers the lane cap hook for both tools" {
+  run "$tools/watermark/hooks-install.sh"
+  [ "$status" -eq 0 ]
+  grep -F -q 'lanes/lanes.sh hook' .claude/settings.json
+  grep -F -q 'lanes/lanes.sh hook' .cursor/hooks.json
+  run "$tools/watermark/hooks-install.sh" --check
+  [ "$status" -eq 0 ]
+}
+
+@test "check fails when the lane cap hook is missing" {
+  mkdir -p .claude .cursor
+  printf '%s\n' '{"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"node .helmsman/tools/watermark/hook.mjs"}]}]}}' > .claude/settings.json
+  printf '%s\n' '{"version":1,"hooks":{"preToolUse":[{"command":"node .helmsman/tools/watermark/hook.mjs"}]}}' > .cursor/hooks.json
+  run "$tools/watermark/hooks-install.sh" --check
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"has no lane cap hook"* ]]
 }

@@ -6,6 +6,11 @@
         "command": "node .helmsman/tools/watermark/hook.mjs",
         "matcher": "^(Shell|MCP:.*)$",
         "timeout": 10
+      },
+      {
+        "command": "bash .helmsman/tools/lanes/lanes.sh hook",
+        "matcher": "^Shell$",
+        "timeout": 10
       }
     ]
   }

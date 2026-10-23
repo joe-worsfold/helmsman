@@ -22,6 +22,7 @@ One question at a time. Do not invent an answer.
 2. **Name.** The product name, lowercase, for `package.json` and `sst.config.ts`.
 3. **Issues and CI.** Default `github` for both.
 4. **Night run.** May it file issues? May it fix? Both default `no`.
+5. **Disk budget.** How many GB of this machine's disk agent lanes may use. A lane is one worktree with its installs and builds. Default: keep the machine's current budget, or no cap when it has none. The budget belongs to the machine, so it is not written to the repo.
 
 ## Resolve versions
 
@@ -238,10 +239,11 @@ In order. Each must pass before the next.
 4. `.helmsman/tools/ci/emit.sh` when CI is `github`.
 5. `.helmsman/tools/plugin/enable.sh <Helmsman sha>`, with the same sha as the `Helmsman:` setup line. It pins the helmsman Claude Code plugin in `.claude/settings.json`. The plugin carries the skills, the always-on rules, and the watermark hook, so a teammate gets them after accepting the folder's trust prompt. Skip this step to keep the copied `.claude/` files instead.
 6. `.helmsman/tools/claude/emit.sh`. With the plugin enabled, it removes its generated copies and only writes `CLAUDE.md`. Without it, it writes `.claude/rules/` from `.cursor/rules/`, links each skill into `.claude/skills/`, and writes `CLAUDE.md` as `@AGENTS.md` when there is none. Claude Code reads only `.claude/`, so without this step it sees `AGENTS.md` and no Helmsman rule. `pnpm setup:check` fails when `.claude/` drifts.
-7. `.helmsman/tools/watermark/hooks-install.sh`. It registers the watermark hook in `.cursor/hooks.json`, and in `.claude/settings.json` when the plugin is not enabled, so every pull request body, GitHub comment, and Slack or Jira message an agent sends names the driver, the model, and the skills used. `pnpm setup:check` fails when a file is missing it.
-8. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
-9. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
-10. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
+7. `.helmsman/tools/watermark/hooks-install.sh`. It registers the watermark hook in `.cursor/hooks.json`, and the watermark and lane cap hooks in `.claude/settings.json` when the plugin is not enabled. The watermark hook makes sure every pull request body, GitHub comment, and Slack or Jira message an agent sends names the driver, the model, and the skills used. `pnpm setup:check` fails when a file is missing it.
+8. `.helmsman/tools/lanes/lanes.sh budget <GB>` when the user gave a disk budget. It measures the largest lane on the machine (10 GB before any lane has built), sets the lane count to budget divided by that size, and writes both to `~/.config/helmsman/lanes`. The lane cap hook, which the plugin or step 7 registers, refuses a new worktree once every lane is in use. Run `lanes.sh measure` again after builds change size. Report whether `sccache` is installed. It lets a new lane reuse the dependencies another lane compiled. Installing it is the user's call.
+9. `pnpm lint:actions`. It installs actionlint on the first run and lints `.github/workflows` when that directory exists.
+10. `pnpm exec lefthook run pre-commit --force`. It runs every Helmsman gate the hook runs; without `--force` lefthook skips them when nothing is staged.
+11. Commit: `chore(setup): setup STAR with Helmsman <short sha>`. The hook runs again; never bypass it.
 
 ## Stop
 
@@ -272,6 +274,8 @@ If a root `platform/` crate exists, move it to `packages/platform/rs` and drop t
 .helmsman/tools/claude/emit.sh
 .helmsman/tools/watermark/hooks-install.sh
 ```
+
+Then `.helmsman/tools/lanes/lanes.sh budget <GB>` when the machine has no lane budget yet and the user gives one.
 
 Skip `plugin/enable.sh` in a repo that keeps the copied `.claude/` files. `ensure-rust-tasks.sh` writes the Turbo scripts beside each crate. `ci/emit.sh` rewrites the workflow for the languages and features the repo has. Do not hand-edit that workflow. `claude/emit.sh` rewrites `.claude/rules/` and the `.claude/skills/` links after a rename. Edit the `.mdc` source, not the generated copy.
 

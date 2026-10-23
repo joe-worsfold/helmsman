@@ -1,6 +1,6 @@
 {
   "name": "helmsman",
-  "description": "Helmsman standards, review, and delivery skills and rules, and the agent watermark hook.",
+  "description": "Helmsman standards, review, and delivery skills and rules, the agent watermark hook, and the lane cap hook.",
   "author": {
     "name": "Joe Worsfold",
     "url": "https://github.com/joe-worsfold"

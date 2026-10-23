@@ -1,7 +1,7 @@
 {
   "name": "helmsman",
   "displayName": "Helmsman",
-  "description": "Helmsman standards, review, and delivery skills, the always-on rules, and the agent watermark hook.",
+  "description": "Helmsman standards, review, and delivery skills, the always-on rules, the agent watermark hook, and the lane cap hook.",
   "author": {
     "name": "Joe Worsfold",
     "url": "https://github.com/joe-worsfold"
@@ -31,6 +31,16 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}\"/.helmsman/tools/watermark/hook.mjs",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "^(Bash|Agent|EnterWorktree)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/.helmsman/tools/lanes/lanes.sh hook",
             "timeout": 10
           }
         ]

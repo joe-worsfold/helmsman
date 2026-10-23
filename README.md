@@ -42,7 +42,7 @@ mkdir -p ~/.cursor/skills && cp -R .cursor/skills/helmsman-setup ~/.cursor/skill
 
 For Claude Code, copy it to `~/.claude/skills/` instead.
 
-Open an empty project folder in Cursor or Claude Code and run `/helmsman-setup`. It asks for the Helmsman checkout, the product name, and whether the night run may file issues or edit code. Both of those default to no.
+Open an empty project folder in Cursor or Claude Code and run `/helmsman-setup`. It asks for the Helmsman checkout, the product name, whether the night run may file issues or edit code (both default to no), and how much of this machine's disk agent lanes may use. The disk budget sets how many worktrees agents may hold at once, and a hook refuses one more.
 
 ## Commands
 
