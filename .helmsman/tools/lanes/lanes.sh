@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# Lanes: how many worktrees this machine's disk can hold, and a Claude Code hook
-# that refuses a new worktree once they are all in use.
+# Lanes: how many worktrees this machine's disk can hold, and a Claude Code and
+# Cursor hook that refuses a new worktree once they are all in use.
 #
 #   lanes.sh                       print the budget, the lane size, the lane count, and the active lanes
 #   lanes.sh budget <GB> [root...] set the disk budget for lanes, then measure
 #   lanes.sh measure               measure the lane size from the active lanes and rewrite the count
-#   lanes.sh hook                  PreToolUse hook: deny a new worktree when every lane is in use
+#   lanes.sh hook                  pre-tool hook: deny a new worktree when every lane is in use
+#
+# Claude Code: Bash running git worktree add, an Agent with worktree isolation, and
+# EnterWorktree without a path. Cursor: Shell running git worktree add. Cursor's own
+# agent worktrees are created without a tool call, so they count as lanes but no hook
+# can refuse them.
 #
 # budget and measure take --dry-run: print the file they would write, and write nothing.
 #
@@ -147,24 +152,33 @@ hook() {
   [[ "$input" == *orktree* ]] || exit 0
   lanes="$(field Lanes)"
   [[ -n "$lanes" ]] || exit 0
+  # Prints "cursor" or "claude" when the call would create a worktree, nothing otherwise.
   wants="$(python3 -c '
 import json, re, sys
 d = json.load(sys.stdin)
 tool, args = d.get("tool_name"), d.get("tool_input") or {}
-if tool == "Bash":
-    # Only where git starts a command, so text that mentions the words is not a worktree.
-    pattern = r"(^|[;&|(\n]|\$\()\s*git(\s+-C\s+\S+)?\s+worktree\s+add\b"
-    print("yes" if re.search(pattern, args.get("command", "")) else "")
+client = "cursor" if "cursor_version" in d else "claude"
+# Git where it starts a command (after a separator, a quote, or env assignments), with any
+# global options, so text that only mentions the words is not a worktree.
+git_add = re.compile(
+    r"(^|[;&|(\n\"\x27`]|\$\()\s*(\w+=\S*\s+)*git(\s+-[Cc]\s+\S+|\s+--[\w-]+(=\S+)?)*\s+worktree\s+add\b"
+)
+if tool in ("Bash", "Shell"):
+    creates = bool(git_add.search(args.get("command", "")))
 elif tool == "Agent":
-    print("yes" if args.get("isolation") == "worktree" else "")
+    creates = args.get("isolation") == "worktree"
 elif tool == "EnterWorktree":
-    print("yes")
+    # With a path it enters a worktree that already exists, which must stay allowed.
+    creates = not args.get("path")
+else:
+    creates = False
+print(client if creates else "")
 ' <<< "$input")"
   [[ -n "$wants" ]] || exit 0
   lines="$(active_lanes)"
   count="$(printf '%s' "$lines" | grep -c . || true)"
   (( count < lanes )) && exit 0
-  LINES_TEXT="$lines" COUNT="$count" LANES="$lanes" BUDGET="$(field 'Disk budget')" SIZE="$(field 'Lane size')" python3 -c '
+  CLIENT="$wants" LINES_TEXT="$lines" COUNT="$count" LANES="$lanes" BUDGET="$(field 'Disk budget')" SIZE="$(field 'Lane size')" python3 -c '
 import json, os
 e = os.environ
 lanes = "\n".join("  " + l for l in e["LINES_TEXT"].splitlines())
@@ -174,7 +188,10 @@ reason = (
     "Finish a lane first: once its pull request is merged, run `git worktree remove <path>`. "
     "If no lane can be freed, stop and tell the user the lanes are full.\nActive lanes:\n"
 ).format(e["COUNT"], e["LANES"], e["BUDGET"], e["SIZE"]) + lanes
-print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": reason}}))
+if e["CLIENT"] == "cursor":
+    print(json.dumps({"permission": "deny", "user_message": reason, "agent_message": reason}))
+else:
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": reason}}))
 '
 }
 

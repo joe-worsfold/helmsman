@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Register the watermark pre-tool hook for Claude Code and Cursor, and the lane cap hook for Claude Code.
+# Register the watermark and lane cap pre-tool hooks for Claude Code and Cursor.
 #
-#   .claude/settings.json  hooks.PreToolUse, matcher Bash and mcp__ tools
-#   .cursor/hooks.json     hooks.preToolUse, matcher Shell and MCP: tools
+#   .claude/settings.json  hooks.PreToolUse: watermark on Bash and mcp__ tools, lane cap on Bash, Agent, EnterWorktree
+#   .cursor/hooks.json     hooks.preToolUse: watermark on Shell and MCP: tools, lane cap on Shell
 #
 # Other settings and hooks are kept. Running it again changes nothing.
-# --check fails when either file is missing the hook. It writes nothing.
+# --check fails when either file is missing a hook. It writes nothing.
 set -euo pipefail
 
 mode="write"
@@ -77,12 +77,18 @@ cursor_path = Path(".cursor/hooks.json")
 cursor = load(cursor_path)
 cursor.setdefault("version", 1)
 pre = cursor.setdefault("hooks", {}).setdefault("preToolUse", [])
-if not any(script in h.get("command", "") for h in pre):
+cursor_hooks = [
+    ("watermark", script, "^(Shell|MCP:.*)$", f"node {script}"),
+    ("lane cap", lanes, "^Shell$", f"bash {lanes} hook"),
+]
+for name, path, matcher, command in cursor_hooks:
+    if any(path in h.get("command", "") for h in pre):
+        continue
     if mode == "check":
-        problems.append(f"{cursor_path} has no watermark hook")
-    else:
-        pre.append({"command": f"node {script}", "matcher": "^(Shell|MCP:.*)$", "timeout": 10})
-        save(cursor_path, cursor)
+        problems.append(f"{cursor_path} has no {name} hook")
+        continue
+    pre.append({"command": command, "matcher": matcher, "timeout": 10})
+    save(cursor_path, cursor)
 
 if problems:
     for p in problems:

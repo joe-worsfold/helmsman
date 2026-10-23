@@ -80,3 +80,26 @@ teardown() {
   run bash -c "printf '%s' '{\"tool_name\":\"Agent\",\"tool_input\":{\"isolation\":\"worktree\"}}' | '$lanes' hook"
   [[ "$output" == *'"deny"'* ]]
 }
+
+@test "hook catches git options, env assignments, and a quoted command" {
+  "$lanes" budget 20 "$root"
+  for command in 'git -c a=b --git-dir=x/.git worktree add ../three' 'GIT_DIR=x git worktree add ../three' "bash -c \\\"git worktree add ../three\\\""; do
+    run bash -c "printf '%s' '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$command\"}}' | '$lanes' hook"
+    [[ "$output" == *'"deny"'* ]] || return 1
+  done
+}
+
+@test "hook lets EnterWorktree into an existing worktree when every lane is in use" {
+  "$lanes" budget 20 "$root"
+  run bash -c "printf '%s' '{\"tool_name\":\"EnterWorktree\",\"tool_input\":{\"path\":\"$root/app-one\"}}' | '$lanes' hook"
+  [ -z "$output" ]
+  run bash -c "printf '%s' '{\"tool_name\":\"EnterWorktree\",\"tool_input\":{\"name\":\"three\"}}' | '$lanes' hook"
+  [[ "$output" == *'"deny"'* ]]
+}
+
+@test "hook answers Cursor in Cursor's shape" {
+  "$lanes" budget 20 "$root"
+  run bash -c "printf '%s' '{\"cursor_version\":\"3.5\",\"tool_name\":\"Shell\",\"tool_input\":{\"command\":\"git worktree add ../three\"}}' | '$lanes' hook"
+  [[ "$output" == *'"permission": "deny"'* ]]
+  [[ "$output" == *'"agent_message"'* ]]
+}
