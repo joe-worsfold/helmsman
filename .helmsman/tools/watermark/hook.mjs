@@ -2,7 +2,7 @@
 // Pre-tool hook for Claude Code (PreToolUse) and Cursor (preToolUse).
 // Rewrites the tool input so every message an agent sends starts with a quoted line naming
 // the driver's GitHub login, the model, and the skills loaded this session.
-//   shell: `gh pr|issue create|edit|comment|review` runs through gh.mjs
+//   shell: `gh pr|issue create|edit|comment|review` and `gh api` run through bin/gh and gh.mjs
 //   MCP:   string body fields on Slack, Jira, GitHub, and similar send/post tools
 // Anything else passes through untouched.
 import { execFileSync } from "node:child_process";
@@ -106,8 +106,10 @@ const quote = (s) => `'${s.replaceAll("'", `'\\''`)}'`;
 
 function rewrite(name, input) {
   if (typeof input?.command === "string" && GH_WRITE.test(input.command)) {
-    const wrapper = fileURLToPath(new URL("./gh.mjs", import.meta.url));
-    const prefix = `export HELMSMAN_WATERMARK=${quote(watermark("github"))}; gh() { node ${quote(wrapper)} "$@"; }; `;
+    // The repo's hook and the user install can both run. Either one's prefix is enough.
+    if (input.command.startsWith("export HELMSMAN_WATERMARK=")) return null;
+    const bin = fileURLToPath(new URL("./bin", import.meta.url));
+    const prefix = `export HELMSMAN_WATERMARK=${quote(watermark("github"))} PATH=${quote(bin)}:"$PATH"; `;
     return { ...input, command: prefix + input.command };
   }
   // Cursor's matcher passes only Shell and MCP tools, and its docs do not say whether tool_name keeps the MCP: prefix.

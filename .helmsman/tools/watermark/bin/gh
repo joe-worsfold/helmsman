@@ -1,0 +1,4 @@
+#!/bin/sh
+# hook.mjs puts this directory first on PATH for a command that writes with gh. gh.mjs adds
+# the watermark, then runs the real gh with this directory taken off PATH.
+exec node "$(dirname "$0")/../gh.mjs" "$@"
