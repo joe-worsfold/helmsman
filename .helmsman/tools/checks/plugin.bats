@@ -71,3 +71,31 @@ teardown() {
   [ "$status" -eq 1 ]
   [[ "$output" == *"has no lane cap hook"* ]]
 }
+
+@test "--user copies the hook and registers it in the user's Claude and Cursor settings" {
+  export HOME="$repo/home" CLAUDE_CONFIG_DIR="" HELMSMAN_HOME=""
+  mkdir -p "$HOME/.claude" "$HOME/.cursor"
+  printf '%s\n' '{"model":"opus","hooks":{"PreToolUse":[{"hooks":[{"type":"command","command":"status"}]}]}}' > "$HOME/.claude/settings.json"
+  run "$tools/watermark/hooks-install.sh" --user
+  [ "$status" -eq 0 ]
+  dest="$HOME/.local/share/helmsman/watermark"
+  [ -x "$dest/bin/gh" ] && [ -f "$dest/gh.mjs" ] && [ -f "$dest/hook.mjs" ]
+  grep -F -q "node \\\"$dest/hook.mjs\\\"" "$HOME/.claude/settings.json"
+  grep -F -q '"model": "opus"' "$HOME/.claude/settings.json"
+  grep -F -q "$dest/hook.mjs" "$HOME/.cursor/hooks.json"
+  run "$tools/watermark/hooks-install.sh" --user
+  [ "$(grep -c "$dest/hook.mjs" "$HOME/.claude/settings.json")" -eq 1 ]
+  run "$tools/watermark/hooks-install.sh" --user --check
+  [ "$status" -eq 0 ]
+}
+
+@test "--user --check fails on a stale copy, and skips Cursor when it is not installed" {
+  export HOME="$repo/home" CLAUDE_CONFIG_DIR="" HELMSMAN_HOME=""
+  run "$tools/watermark/hooks-install.sh" --user
+  [ "$status" -eq 0 ]
+  [ ! -e "$HOME/.cursor" ]
+  printf '// old\n' >> "$HOME/.local/share/helmsman/watermark/gh.mjs"
+  run "$tools/watermark/hooks-install.sh" --user --check
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"gh.mjs does not match"* ]]
+}

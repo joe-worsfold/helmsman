@@ -43,12 +43,18 @@ The driver is the GitHub login. The hook reads it from `HELMSMAN_DRIVER`, then `
 
 | Call | What the hook changes |
 | --- | --- |
-| `gh pr` or `gh issue` with `create`, `edit`, `comment`, or `review` | It defines a `gh` shell function in front of the command. The shell expands heredocs and quotes, then `gh.mjs` adds the line to `--body`, `-b`, `--body=`, or a copy of `--body-file`, and runs the real `gh`. |
+| `gh pr` or `gh issue` with `create`, `edit`, `comment`, or `review`, and `gh api` | It puts `bin/gh` first on `PATH` in front of the command, so subshells, `bash -c`, `xargs`, `command gh`, and scripts reach it too. The shell expands heredocs and quotes, then `gh.mjs` adds the line to `--body`, `-b`, `--body=`, or a copy of `--body-file`, and runs the real `gh`. For `gh api` it marks a `body=` field (`-f`, `-F`, `--raw-field`, `--field`, and `body=@file`) and a top-level `body` in an `--input` JSON file. `gh pr create --fill` with no body is created first, then its body is edited to start with the line. |
 | An MCP send, post, or comment tool on Slack, Jira, Confluence, GitHub, Linear, Teams, or Discord | The first string field among `text`, `body`, `message`, `comment`, `commentBody`, `markdown_text`. File, branch, repo, label, reaction, and upload tools are left alone. |
 
 Cursor puts the model and the user's email in the hook input. Claude Code does not, so the hook reads the model from the last assistant entry in `transcript_path`. Skills come from the transcript: `Skill` calls and `/name` commands in Claude Code, reads of a `SKILL.md` in Cursor. A body that already starts with the line is left alone.
 
-Not covered: `gh api`, `curl` to a webhook, and a `gh pr create --fill` with no body. In Cursor, every `SKILL.md` an agent reads counts as a skill, including one it only edited.
+Not covered: `curl` to a webhook, a `gh` called by its full path, and message text inside a GraphQL `query=`. In Cursor, every `SKILL.md` an agent reads counts as a skill, including one it only edited.
+
+### Every session on the machine
+
+Claude Code loads a repo's `.claude/settings.json`, and Cursor its `.cursor/hooks.json`, only for a session started inside that repo. An agent started in a parent folder of several worktrees, or in a bare repo that holds them, never loads the repo hook. It can still `cd` into a worktree and post, with no watermark.
+
+`.helmsman/tools/watermark/hooks-install.sh --user` closes that gap. It copies `hook.mjs`, `gh.mjs`, and `bin/gh` to `~/.local/share/helmsman/watermark/` (`HELMSMAN_HOME` moves the root), and registers that copy in `~/.claude/settings.json` (`CLAUDE_CONFIG_DIR` moves it) and, when `~/.cursor` exists, `~/.cursor/hooks.json`. In a repo with its own hook both run. The first prefix wins and a body already marked is left alone, so the line appears once. Run it again after updating Helmsman. `--user --check` fails when the copy differs from the checkout.
 
 ## Not covered by the emitter
 
