@@ -1,0 +1,6 @@
+# shortcut: GHSA-fc5q-39xc-vjpf (picomatch ReDoS) has no patched release; picomatch 4.0.7 is the latest and is affected.
+# It reaches this tool through typescript-eslint > typescript-estree > tinyglobby, and only lints repo-owned globs.
+# Remove this ignore when picomatch ships a fixed version and the lockfile moves to it.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-fc5q-39xc-vjpf
