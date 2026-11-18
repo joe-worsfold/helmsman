@@ -1,9 +1,9 @@
 {
   "name": "helmsman",
   "private": true,
-  "packageManager": "pnpm@12.14.0",
+  "packageManager": "pnpm@12.21.0",
   "engines": {
-    "node": ">=26.12.0"
+    "node": ">=26.13.1"
   },
   "scripts": {
     "prepare": "lefthook install",
@@ -29,9 +29,9 @@
     "check": "bash .helmsman/tools/checks/pnpm-task.sh check"
   },
   "devDependencies": {
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "bats": "^1.13.0",
-    "lefthook": "^2.2.1",
+    "lefthook": "^2.2.2",
     "typescript": "^7.0.2"
   }
 }
